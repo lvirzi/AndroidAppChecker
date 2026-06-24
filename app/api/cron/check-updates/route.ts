@@ -37,7 +37,7 @@ async function checkUserApps(userId: string): Promise<CronResult> {
 
   for (const app of data.apps) {
     try {
-      const info = await getAppInfo(app.packageId);
+      const info = await getAppInfo(app.sourceType ?? 'android', app.packageId);
       const updateAvailable = info.version !== app.addedVersion;
       const shouldAlert = updateAvailable && info.version !== app.lastAlertedVersion;
 

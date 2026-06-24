@@ -15,17 +15,6 @@ interface TrackedApp extends StoredApp {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function extractPackageId(input: string): string | null {
-  input = input.trim();
-  if (/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(input)) return input;
-  try {
-    const url = new URL(input);
-    if (url.hostname.includes('play.google.com')) return url.searchParams.get('id');
-  } catch {
-    // not a url
-  }
-  return null;
-}
 
 function formatDate(iso: string | null): string {
   if (!iso) return '—';
@@ -54,7 +43,39 @@ const DEFAULT_EMAIL: EmailSettings = { enabled: false, recipientEmail: '' };
 
 // ─── StatusBadge ─────────────────────────────────────────────────────────────
 
+function SourceTypeBadge({ type }: { type: 'android' | 'ios' | 'web' }) {
+  if (type === 'ios')
+    return (
+      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-slate-800 text-white">
+        {/* Apple  */}
+        <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-current">
+          <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+        </svg>
+        iOS
+      </span>
+    );
+  if (type === 'web')
+    return (
+      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-blue-600 text-white">
+        <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-none stroke-current stroke-2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
+        </svg>
+        Web
+      </span>
+    );
+  return (
+    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-green-600 text-white">
+      <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-current">
+        <path d="M17.523 15.341a5.96 5.96 0 0 0 .477-2.341 5.96 5.96 0 0 0-.477-2.341l2.87-1.657a9.95 9.95 0 0 1 0 7.996l-2.87-1.657ZM6.477 15.341 3.607 17a9.95 9.95 0 0 1 0-7.996l2.87 1.657A5.96 5.96 0 0 0 6 13a5.96 5.96 0 0 0 .477 2.341ZM12 18a5.98 5.98 0 0 0 3.182-.91l1.657 2.87A9.95 9.95 0 0 1 12 22a9.95 9.95 0 0 1-4.839-1.04l1.657-2.87A5.98 5.98 0 0 0 12 18ZM12 8a5.98 5.98 0 0 0-3.182.91L7.16 6.04A9.95 9.95 0 0 1 12 5a9.95 9.95 0 0 1 4.839 1.04l-1.657 2.87A5.98 5.98 0 0 0 12 8Zm0 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+      </svg>
+      Android
+    </span>
+  );
+}
+
 function StatusBadge({ app }: { app: TrackedApp }) {
+  const isWeb = app.sourceType === 'web';
+
   if (app.checking)
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
@@ -80,12 +101,12 @@ function StatusBadge({ app }: { app: TrackedApp }) {
   if (app.updateAvailable)
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-        <span>↑</span> Update available
+        <span>↑</span> {isWeb ? 'Content changed' : 'Update available'}
       </span>
     );
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">
-      <span>✓</span> Up to date
+      <span>✓</span> {isWeb ? 'No changes' : 'Up to date'}
     </span>
   );
 }
@@ -597,17 +618,18 @@ function AppShell() {
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     setAddError(null);
-    const packageId = extractPackageId(input);
-    if (!packageId) { setAddError('Enter a valid Play Store URL or package ID'); return; }
-    if (appsRef.current.some((a) => a.packageId === packageId)) { setAddError('Already in the list'); return; }
+    const raw = input.trim();
+    if (!raw) { setAddError('Enter a valid URL or identifier'); return; }
+    if (appsRef.current.some((a) => a.packageId === raw)) { setAddError('Already in the list'); return; }
     setAdding(true);
     try {
-      const res = await fetch(`/api/check-version?packageId=${encodeURIComponent(packageId)}`);
+      const res = await fetch(`/api/check-version?packageId=${encodeURIComponent(raw)}`);
       if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.error ?? `HTTP ${res.status}`); }
-      const info = await res.json();
+      const info = await res.json() as { name: string; version: string; icon: string | null; developer: string | null; sourceType: 'android' | 'ios' | 'web' };
       const newApp: TrackedApp = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        packageId,
+        sourceType: info.sourceType,
+        packageId: raw,
         name: info.name,
         icon: info.icon,
         developer: info.developer,
@@ -930,7 +952,7 @@ function AppShell() {
               type="text"
               value={input}
               onChange={(e) => { setInput(e.target.value); setAddError(null); }}
-              placeholder="Play Store URL or package ID (e.g. com.whatsapp)"
+              placeholder="Play Store URL, App Store URL, Android package ID, or any https:// URL"
               disabled={adding}
               className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent disabled:opacity-60 transition"
             />
@@ -970,7 +992,7 @@ function AppShell() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50 text-left">
-                    <th className="px-4 py-3 text-xs font-semibold text-slate-500 w-10" />
+                    <th className="px-2 py-3 text-xs font-semibold text-slate-500 w-[184px]" />
                     <th className="px-4 py-3 text-xs font-semibold text-slate-500">App</th>
                     <th className="px-4 py-3 text-xs font-semibold text-slate-500 hidden md:table-cell">Package ID</th>
                     <th className="px-4 py-3 text-xs font-semibold text-slate-500 hidden sm:table-cell">Added on</th>
@@ -982,32 +1004,98 @@ function AppShell() {
                 <tbody className="divide-y divide-slate-100">
                   {apps.map((app) => (
                     <tr key={app.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-3 py-2">
-                        {app.icon ? (
-                          <Image src={app.icon} alt={app.name} width={56} height={56} className="rounded-xl object-cover" unoptimized />
-                        ) : (
-                          <div className="w-14 h-14 rounded-xl bg-slate-200 flex items-center justify-center">
-                            <svg viewBox="0 0 24 24" className="w-7 h-7 fill-slate-400"><path d="M17.523 15.341a5.96 5.96 0 0 0 .477-2.341 5.96 5.96 0 0 0-.477-2.341l2.87-1.657a9.95 9.95 0 0 1 0 7.996l-2.87-1.657ZM6.477 15.341 3.607 17a9.95 9.95 0 0 1 0-7.996l2.87 1.657A5.96 5.96 0 0 0 6 13a5.96 5.96 0 0 0 .477 2.341ZM12 18a5.98 5.98 0 0 0 3.182-.91l1.657 2.87A9.95 9.95 0 0 1 12 22a9.95 9.95 0 0 1-4.839-1.04l1.657-2.87A5.98 5.98 0 0 0 12 18ZM12 8a5.98 5.98 0 0 0-3.182.91L7.16 6.04A9.95 9.95 0 0 1 12 5a9.95 9.95 0 0 1 4.839 1.04l-1.657 2.87A5.98 5.98 0 0 0 12 8Zm0 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" /></svg>
+                      {/* Icon + type badge */}
+                      <td className="px-2 py-2">
+                        <div className="relative inline-block">
+                          {app.icon ? (
+                            <Image
+                              src={app.icon}
+                              alt={app.name}
+                              width={168}
+                              height={168}
+                              className="rounded-2xl object-cover w-[168px] h-[168px]"
+                              unoptimized
+                            />
+                          ) : (
+                            <div className={`w-[168px] h-[168px] rounded-2xl flex items-center justify-center ${
+                              app.sourceType === 'ios' ? 'bg-slate-800' :
+                              app.sourceType === 'web' ? 'bg-blue-600' :
+                              'bg-slate-200'
+                            }`}>
+                              {app.sourceType === 'ios' ? (
+                                <svg viewBox="0 0 24 24" className="w-20 h-20 fill-white">
+                                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+                                </svg>
+                              ) : app.sourceType === 'web' ? (
+                                <svg viewBox="0 0 24 24" className="w-20 h-20 fill-none stroke-white stroke-1">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
+                                </svg>
+                              ) : (
+                                <svg viewBox="0 0 24 24" className="w-20 h-20 fill-slate-400">
+                                  <path d="M17.523 15.341a5.96 5.96 0 0 0 .477-2.341 5.96 5.96 0 0 0-.477-2.341l2.87-1.657a9.95 9.95 0 0 1 0 7.996l-2.87-1.657ZM6.477 15.341 3.607 17a9.95 9.95 0 0 1 0-7.996l2.87 1.657A5.96 5.96 0 0 0 6 13a5.96 5.96 0 0 0 .477 2.341ZM12 18a5.98 5.98 0 0 0 3.182-.91l1.657 2.87A9.95 9.95 0 0 1 12 22a9.95 9.95 0 0 1-4.839-1.04l1.657-2.87A5.98 5.98 0 0 0 12 18ZM12 8a5.98 5.98 0 0 0-3.182.91L7.16 6.04A9.95 9.95 0 0 1 12 5a9.95 9.95 0 0 1 4.839 1.04l-1.657 2.87A5.98 5.98 0 0 0 12 8Zm0 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+                                </svg>
+                              )}
+                            </div>
+                          )}
+                          {/* Source type badge — bottom-right corner of icon */}
+                          <div className="absolute bottom-1.5 right-1.5">
+                            <SourceTypeBadge type={app.sourceType} />
                           </div>
-                        )}
+                        </div>
                       </td>
+
+                      {/* Name / developer */}
                       <td className="px-4 py-3">
                         <div className="font-medium text-slate-800">{app.name}</div>
                         {app.developer && <div className="text-xs text-slate-400">{app.developer}</div>}
-                        {app.lastChecked && <div className="text-xs text-slate-400 mt-0.5 hidden sm:block">Checked {formatDate(app.lastChecked)}</div>}
+                        {app.lastChecked && (
+                          <div className="text-xs text-slate-400 mt-0.5 hidden sm:block">
+                            Checked {formatDate(app.lastChecked)}
+                          </div>
+                        )}
                       </td>
+
+                      {/* Package ID / URL */}
                       <td className="px-4 py-3 hidden md:table-cell">
-                        <a href={`https://play.google.com/store/apps/details?id=${app.packageId}`} target="_blank" rel="noopener noreferrer" className="text-xs text-slate-500 hover:text-green-600 font-mono underline-offset-2 hover:underline transition-colors">{app.packageId}</a>
+                        {app.sourceType === 'web' ? (
+                          <a href={app.packageId} target="_blank" rel="noopener noreferrer"
+                            className="text-xs text-slate-500 hover:text-blue-600 underline-offset-2 hover:underline transition-colors break-all max-w-[200px] block">
+                            {app.packageId}
+                          </a>
+                        ) : (
+                          <a
+                            href={
+                              app.sourceType === 'ios'
+                                ? `https://apps.apple.com/app/id${app.packageId}`
+                                : `https://play.google.com/store/apps/details?id=${app.packageId}`
+                            }
+                            target="_blank" rel="noopener noreferrer"
+                            className="text-xs text-slate-500 hover:text-green-600 font-mono underline-offset-2 hover:underline transition-colors">
+                            {app.packageId}
+                          </a>
+                        )}
                       </td>
+
+                      {/* Date added */}
                       <td className="px-4 py-3 hidden sm:table-cell">
                         <div className="text-slate-600">{formatDate(app.dateAdded)}</div>
-                        <div className="text-xs text-slate-400">v{app.addedVersion}</div>
+                        {app.sourceType !== 'web' && (
+                          <div className="text-xs text-slate-400">v{app.addedVersion}</div>
+                        )}
                       </td>
+
+                      {/* Version / hash */}
                       <td className="px-4 py-3">
-                        {app.latestVersion ? (
+                        {app.sourceType === 'web' ? (
+                          <span className="font-mono text-xs text-slate-400">
+                            {app.latestVersion ? app.latestVersion.slice(0, 8) : app.addedVersion.slice(0, 8)}
+                          </span>
+                        ) : app.latestVersion ? (
                           <div>
                             <div className="font-mono text-slate-800 font-medium">{app.latestVersion}</div>
-                            {app.updateAvailable && <div className="text-xs text-slate-400 line-through">{app.addedVersion}</div>}
+                            {app.updateAvailable && (
+                              <div className="text-xs text-slate-400 line-through">{app.addedVersion}</div>
+                            )}
                           </div>
                         ) : (
                           <span className="text-slate-400 font-mono">{app.addedVersion}</span>

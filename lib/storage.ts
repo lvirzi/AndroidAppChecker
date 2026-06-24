@@ -2,8 +2,11 @@ import { list, put, get } from '@vercel/blob';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+export type SourceType = 'android' | 'ios' | 'web';
+
 export interface StoredApp {
   id: string;
+  sourceType: SourceType;
   packageId: string;
   name: string;
   icon: string | null;
@@ -13,7 +16,6 @@ export interface StoredApp {
   lastChecked: string | null;
   latestVersion: string | null;
   updateAvailable: boolean | null;
-  /** Last version for which a cron/manual alert was sent — prevents duplicate emails */
   lastAlertedVersion: string | null;
 }
 
@@ -49,16 +51,18 @@ const EMPTY = (): AppData => ({
 });
 
 async function fetchBlobJson(url: string): Promise<AppData | null> {
-  // Use the SDK's get() — it handles auth (Bearer token via undici) correctly
-  // for private stores. Native fetch() returns 403 on private blob URLs.
   const result = await get(url, { access: 'private' });
-  if (!result) return null; // 404
-
-  // Wrap the ReadableStream in a Response to read it as JSON
-  const raw = (await new Response(result.stream).json()) as Partial<AppData>;
+  if (!result) return null;
+  const raw = (await new Response(result.stream).json()) as Partial<AppData> & {
+    apps?: Partial<StoredApp>[];
+  };
   return {
     schemaVersion: raw.schemaVersion ?? 1,
-    apps: raw.apps ?? [],
+    // Backfill sourceType for records saved before multi-source support
+    apps: (raw.apps ?? []).map((a) => ({
+      ...a,
+      sourceType: (a.sourceType as SourceType | undefined) ?? 'android',
+    } as StoredApp)),
     emailSettings: raw.emailSettings ?? { enabled: false, recipientEmail: '' },
   };
 }
