@@ -729,7 +729,7 @@ function AppShell() {
       updateApps(newApps);
       save(newApps);
       if (!updateAvailable) return null;
-      const updateInfo: UpdateInfo = { name: app.name, packageId: app.packageId, icon: app.icon, oldVersion: app.addedVersion, newVersion: info.version };
+      const updateInfo: UpdateInfo = { name: app.name, packageId: app.packageId, icon: app.icon, oldVersion: app.addedVersion, newVersion: info.version, sourceType: app.sourceType };
       if (!silent) {
         await sendUpdateEmail([updateInfo]);
         const s = emailRef.current;

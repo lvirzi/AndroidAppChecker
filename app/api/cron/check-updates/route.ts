@@ -56,6 +56,7 @@ async function checkUserApps(userId: string): Promise<CronResult> {
           icon: app.icon,
           oldVersion: app.addedVersion,
           newVersion: info.version,
+          sourceType: app.sourceType ?? 'android',
         });
       }
     } catch (err) {

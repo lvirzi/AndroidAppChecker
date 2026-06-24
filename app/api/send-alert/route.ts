@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
   }
 
   const effectiveUpdates: UpdateInfo[] = test
-    ? [{ name: 'Test App', packageId: 'com.test.app', icon: null, oldVersion: '1.0.0', newVersion: '1.1.0' }]
+    ? [{ name: 'Test App', packageId: 'com.test.app', icon: null, oldVersion: '1.0.0', newVersion: '1.1.0', sourceType: 'android' as const }]
     : updates;
 
   if (!test && effectiveUpdates.length === 0) {
