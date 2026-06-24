@@ -640,6 +640,17 @@ function AppShell() {
     })();
   }, []);
 
+  // ── Auto check-all on login ──
+  const autoChecked = useRef(false);
+  useEffect(() => {
+    if (dataStatus === 'ready' && appsRef.current.length > 0 && !autoChecked.current) {
+      autoChecked.current = true;
+      checkAll();
+    }
+  // checkAll uses only refs and stable setters — no stale closure risk
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataStatus]);
+
   // ── Email settings ──
   function saveEmailConfig() {
     if (enabledDraft && !isValidEmail(emailDraft.trim())) {
