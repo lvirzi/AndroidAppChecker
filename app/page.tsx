@@ -16,6 +16,10 @@ interface TrackedApp extends StoredApp {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 
+function displayVersion(v: string): string {
+  return /varies/i.test(v) ? 'MULTIPLE' : v;
+}
+
 function formatDate(iso: string | null): string {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('it-IT', {
@@ -1239,10 +1243,10 @@ function AppShell() {
                       </td>
 
                       {/* Package ID / URL */}
-                      <td className="px-4 py-3 hidden md:table-cell">
+                      <td className="px-4 py-3 hidden md:table-cell overflow-hidden">
                         {app.sourceType === 'web' ? (
                           <a href={app.packageId} target="_blank" rel="noopener noreferrer"
-                            className="text-xs text-slate-500 hover:text-blue-600 underline-offset-2 hover:underline transition-colors break-all max-w-[200px] block">
+                            className="text-xs text-slate-500 hover:text-blue-600 underline-offset-2 hover:underline transition-colors break-all block">
                             {app.packageId}
                           </a>
                         ) : (
@@ -1253,7 +1257,7 @@ function AppShell() {
                                 : `https://play.google.com/store/apps/details?id=${app.packageId}`
                             }
                             target="_blank" rel="noopener noreferrer"
-                            className="text-xs text-slate-500 hover:text-green-600 font-mono underline-offset-2 hover:underline transition-colors">
+                            className="text-xs text-slate-500 hover:text-green-600 font-mono underline-offset-2 hover:underline transition-colors break-all block">
                             {app.packageId}
                           </a>
                         )}
@@ -1275,13 +1279,13 @@ function AppShell() {
                           </span>
                         ) : app.latestVersion ? (
                           <div>
-                            <div className="font-mono text-slate-800 font-medium">{app.latestVersion}</div>
+                            <div className="font-mono text-slate-800 font-medium">{displayVersion(app.latestVersion)}</div>
                             {app.updateAvailable && (
-                              <div className="text-xs text-slate-400 line-through">{app.addedVersion}</div>
+                              <div className="text-xs text-slate-400 line-through">{displayVersion(app.addedVersion)}</div>
                             )}
                           </div>
                         ) : (
-                          <span className="text-slate-400 font-mono">{app.addedVersion}</span>
+                          <span className="text-slate-400 font-mono">{displayVersion(app.addedVersion)}</span>
                         )}
                       </td>
                       <td className="px-4 py-3"><StatusBadge app={app} /></td>
