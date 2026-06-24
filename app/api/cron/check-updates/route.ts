@@ -82,7 +82,7 @@ async function checkUserApps(userId: string): Promise<CronResult> {
       await resend.emails.send({
         from,
         to: emailSettings.recipientEmail,
-        subject: `📱 ${count} Android app update${count > 1 ? 's' : ''} available`,
+        subject: `🔔 ${count} update${count > 1 ? 's' : ''} detected`,
         html: buildEmailHTML(newlyFound),
       });
       emailSent = true;

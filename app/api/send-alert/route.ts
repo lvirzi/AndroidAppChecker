@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
   const resend = new Resend(apiKey);
   const from = process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev';
   const subject = test
-    ? '✅ Test — Android App Update Checker'
-    : `📱 ${effectiveUpdates.length} Android app update${effectiveUpdates.length > 1 ? 's' : ''} available`;
+    ? '✅ Test — Update Checker'
+    : `🔔 ${effectiveUpdates.length} update${effectiveUpdates.length > 1 ? 's' : ''} detected`;
 
   try {
     const { error } = await resend.emails.send({
