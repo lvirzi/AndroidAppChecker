@@ -152,10 +152,11 @@ const T = {
     },
     check: {
       h: 'Verificare gli aggiornamenti',
+      autoCheck: 'Al login viene eseguito automaticamente un Check all per aggiornare subito tutti i dati.',
       single: 'Check singolo',
       singleDesc: "— clicca il pulsante ↻ sulla riga di un elemento per verificare immediatamente.",
       all: 'Check all',
-      allDesc: '— verifica tutti gli elementi in sequenza. Al termine, se ci sono novità e gli alert email sono attivi, viene inviata una email riepilogativa.',
+      allDesc: '— verifica tutti gli elementi in parallelo. Al termine, se ci sono novità e gli alert email sono attivi, viene inviata una email riepilogativa.',
       badgeApps: 'Badge per app (Android/iOS):',
       badgeWeb: 'Badge per siti web:',
       or: 'oppure',
@@ -166,6 +167,8 @@ const T = {
       p1b: ' per tutti gli utenti registrati. Se vengono trovate novità, viene inviata una email riepilogativa a ciascun utente che ha gli alert attivi.',
       p2a: 'Il pulsante ',
       p2b: " nell'header esegue immediatamente il controllo per l'utente corrente, senza aspettare l'orario schedulato. È utile per testare gli alert o forzare un aggiornamento immediato dei dati.",
+      concurrency: 'Il numero di verifiche parallele è configurabile tramite la variabile d\'ambiente ',
+      concurrencyB: ' su Vercel (default: 3). Richiede un redeploy per applicare il cambiamento.',
       warn: "La stessa novità viene notificata via email una sola volta. Per le app viene confrontata la versione; per i siti web viene confrontato l'hash del contenuto.",
     },
     email: {
@@ -223,10 +226,11 @@ const T = {
     },
     check: {
       h: 'Checking for updates',
+      autoCheck: 'At login, a Check all is automatically run to immediately refresh all data.',
       single: 'Single check',
       singleDesc: '— click the ↻ button on an item row to check immediately.',
       all: 'Check all',
-      allDesc: '— checks all items in sequence. When done, if there are new findings and email alerts are enabled, a summary email is sent.',
+      allDesc: '— checks all items in parallel. When done, if there are new findings and email alerts are enabled, a summary email is sent.',
       badgeApps: 'Badge for apps (Android/iOS):',
       badgeWeb: 'Badge for websites:',
       or: 'or',
@@ -237,6 +241,8 @@ const T = {
       p1b: ' for all registered users. If new findings are detected, a summary email is sent to each user with alerts enabled.',
       p2a: 'The ',
       p2b: ' button in the header immediately runs the check for the current user, without waiting for the scheduled time. Useful for testing alerts or forcing an immediate data refresh.',
+      concurrency: 'The number of parallel checks is configurable via the ',
+      concurrencyB: ' environment variable on Vercel (default: 3). A redeploy is required to apply the change.',
       warn: 'The same finding is only notified once by email. For apps the version is compared; for websites the content hash is compared.',
     },
     email: {
@@ -383,6 +389,10 @@ function HelpModal({ onClose }: { onClose: () => void }) {
           <section>
             <h3 className="font-semibold text-slate-900 mb-2">{t.check.h}</h3>
             <div className="space-y-2 text-slate-600 leading-relaxed">
+              <div className="flex gap-2 p-2.5 bg-green-50 border border-green-200 rounded-lg text-xs text-green-800">
+                <span className="shrink-0">✓</span>
+                <span>{t.check.autoCheck}</span>
+              </div>
               <p>
                 <span className="inline-flex items-center gap-1 font-medium text-slate-700">
                   <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0">
@@ -417,6 +427,11 @@ function HelpModal({ onClose }: { onClose: () => void }) {
             <div className="space-y-2 text-slate-600 leading-relaxed">
               <p>{t.cron.p1a}<strong>08:00 UTC</strong>{t.cron.p1b}</p>
               <p>{t.cron.p2a}<span className="font-medium text-slate-700">Run cron now</span>{t.cron.p2b}</p>
+              <p className="text-xs text-slate-500">
+                {t.cron.concurrency}
+                <code className="font-mono bg-slate-100 px-1 rounded">NEXT_PUBLIC_CHECK_CONCURRENCY</code>
+                {t.cron.concurrencyB}
+              </p>
               <div className="flex gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
                 <span className="shrink-0">⚠</span>
                 <span>{t.cron.warn}</span>
@@ -1049,8 +1064,13 @@ function AppShell() {
           </div>
         </div>
 
-        {/* Settings panel */}
-        {showSettings && (
+        {/* Settings panel — grid-rows trick for smooth slide-down (0.5 s) */}
+        <div
+          className={`grid transition-[grid-template-rows] duration-500 ease-in-out ${
+            showSettings ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+          }`}
+        >
+          <div className="overflow-hidden">
           <div className="border-t border-slate-200 bg-slate-50">
             <div className="max-w-5xl mx-auto px-4 py-5 space-y-4">
               <h2 className="text-sm font-semibold text-slate-700">Email Alert Settings</h2>
@@ -1095,7 +1115,8 @@ function AppShell() {
               </div>
             </div>
           </div>
-        )}
+          </div>
+        </div>
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-6">
