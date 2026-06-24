@@ -90,6 +90,185 @@ function StatusBadge({ app }: { app: TrackedApp }) {
   );
 }
 
+// ─── Help modal ───────────────────────────────────────────────────────────────
+
+function HelpModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center">
+              <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-none stroke-white stroke-2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+              </svg>
+            </div>
+            <h2 className="text-base font-bold text-slate-800">Manuale d&apos;uso</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+          >
+            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current stroke-2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Scrollable content */}
+        <div className="overflow-y-auto px-6 py-5 space-y-6 text-sm text-slate-700">
+
+          <section>
+            <h3 className="font-semibold text-slate-900 mb-1.5">Cos&apos;è questa applicazione</h3>
+            <p className="text-slate-600 leading-relaxed">
+              <strong>Android App Update Checker</strong> monitora le app Android sul Google Play Store e
+              avvisa via email quando sono disponibili nuove versioni. Ogni utente ha una lista privata
+              di app e impostazioni completamente separate dagli altri account.
+            </p>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-slate-900 mb-1.5">Accesso</h3>
+            <p className="text-slate-600 leading-relaxed">
+              L&apos;applicazione richiede il login con un account Google. Clicca su{' '}
+              <span className="font-medium">Sign in with Google</span> nella schermata iniziale.
+              Ogni account Google ha dati completamente isolati dagli altri utenti.
+            </p>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-slate-900 mb-2">Aggiungere un&apos;app</h3>
+            <ol className="space-y-1.5 text-slate-600 list-decimal list-inside leading-relaxed">
+              <li>
+                Copia l&apos;URL della pagina Play Store dell&apos;app
+                <span className="ml-1 font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">
+                  play.google.com/store/apps/details?id=com.esempio
+                </span>
+                <br />
+                oppure il Package ID diretto
+                <span className="ml-1 font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">
+                  com.esempio
+                </span>
+              </li>
+              <li>Incollalo nel campo <span className="font-medium">Add an app</span> e clicca il pulsante verde.</li>
+              <li>L&apos;app recupera automaticamente nome, icona, sviluppatore e versione corrente dal Play Store.</li>
+            </ol>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-slate-900 mb-2">Verificare gli aggiornamenti</h3>
+            <div className="space-y-2 text-slate-600 leading-relaxed">
+              <p>
+                <span className="inline-flex items-center gap-1 font-medium text-slate-700">
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 0 0 4.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 0 1-15.357-2m15.357 2H15" /></svg>
+                  Check singolo
+                </span>{' '}
+                — clicca il pulsante ↻ sulla riga di un&apos;app per verificare immediatamente se c&apos;è una nuova versione.
+              </p>
+              <p>
+                <span className="font-medium text-slate-700">Check all</span>{' '}
+                — verifica tutte le app in sequenza. Al termine, se ci sono aggiornamenti e gli alert email sono attivi, viene inviata una email riepilogativa.
+              </p>
+              <p>
+                Lo stato viene indicato con un badge colorato:{' '}
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">✓ Up to date</span>
+                {' '}oppure{' '}
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">↑ Update available</span>
+              </p>
+            </div>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-slate-900 mb-2">Controllo automatico (Cron)</h3>
+            <div className="space-y-2 text-slate-600 leading-relaxed">
+              <p>
+                Il sistema esegue automaticamente un controllo ogni giorno alle{' '}
+                <strong>08:00 UTC</strong> per tutti gli utenti registrati. Se vengono trovate nuove
+                versioni, viene inviata una email riepilogativa a ciascun utente che ha gli alert attivi.
+              </p>
+              <p>
+                Il pulsante <span className="font-medium text-slate-700">Run cron now</span> nell&apos;header
+                esegue immediatamente il controllo per l&apos;utente corrente, senza aspettare l&apos;orario
+                schedulato. È utile per testare gli alert o forzare un aggiornamento immediato dei dati.
+              </p>
+              <div className="flex gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                <span className="shrink-0">⚠</span>
+                <span>
+                  Lo stesso aggiornamento viene notificato via email una sola volta: una volta inviato
+                  l&apos;alert per la versione X, non viene ripetuto finché non esce la versione Y.
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-slate-900 mb-2">Alert email</h3>
+            <div className="space-y-2 text-slate-600 leading-relaxed">
+              <p>Clicca sull&apos;icona 🔔 nell&apos;header per aprire le impostazioni:</p>
+              <ol className="list-decimal list-inside space-y-1">
+                <li>Attiva il toggle <span className="font-medium">Send email alerts when updates are detected</span></li>
+                <li>Inserisci l&apos;indirizzo email dove ricevere le notifiche</li>
+                <li>Clicca <span className="font-medium">Save</span></li>
+                <li>Usa <span className="font-medium">Send test email</span> per verificare che la configurazione funzioni</li>
+              </ol>
+              <div className="flex gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700">
+                <span className="shrink-0">ℹ</span>
+                <span>
+                  Gli alert richiedono la variabile d&apos;ambiente{' '}
+                  <code className="font-mono bg-blue-100 px-1 rounded">RESEND_API_KEY</code>{' '}
+                  configurata nel progetto Vercel. Registrati su{' '}
+                  <strong>resend.com</strong> per ottenere una chiave gratuita.
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-slate-900 mb-1.5">Privacy e dati</h3>
+            <p className="text-slate-600 leading-relaxed">
+              La lista delle app e le impostazioni di ogni utente sono salvate privatamente su{' '}
+              <strong>Vercel Blob</strong>. Nessun altro utente può vedere o modificare i tuoi dati.
+              Per rimuovere i tuoi dati, elimina tutte le app dalla lista.
+            </p>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-slate-900 mb-2">Variabili d&apos;ambiente richieste</h3>
+            <div className="space-y-1">
+              {[
+                ['GOOGLE_CLIENT_ID', 'Client ID OAuth da Google Cloud Console'],
+                ['GOOGLE_CLIENT_SECRET', 'Client Secret OAuth da Google Cloud Console'],
+                ['AUTH_SECRET', 'Stringa random per firmare i JWT (openssl rand -base64 32)'],
+                ['BLOB_READ_WRITE_TOKEN', 'Impostato automaticamente da Vercel Blob'],
+                ['RESEND_API_KEY', 'Chiave API Resend per gli alert email (opzionale)'],
+                ['RESEND_FROM_EMAIL', 'Indirizzo mittente personalizzato (opzionale)'],
+                ['CRON_SECRET', 'Protezione endpoint cron da accessi non autorizzati (opzionale)'],
+              ].map(([key, desc]) => (
+                <div key={key} className="flex flex-col sm:flex-row sm:items-baseline gap-x-3 py-1 border-b border-slate-100 last:border-0">
+                  <code className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 shrink-0">{key}</code>
+                  <span className="text-xs text-slate-500">{desc}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-3 border-t border-slate-100 bg-slate-50 rounded-b-2xl shrink-0">
+          <p className="text-xs text-slate-400 text-center">
+            Android App Update Checker · dati da Google Play Store · invio email via Resend
+          </p>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 // ─── Login screen ─────────────────────────────────────────────────────────────
 
 function LoginScreen() {
@@ -170,6 +349,7 @@ function AppShell() {
   const [dataStatus, setDataStatus] = useState<'loading' | 'ready' | 'unconfigured' | 'error'>('loading');
 
   const [showSettings, setShowSettings] = useState(false);
+  const [showManual, setShowManual] = useState(false);
   const [emailDraft, setEmailDraft] = useState('');
   const [enabledDraft, setEnabledDraft] = useState(false);
   const [testingEmail, setTestingEmail] = useState(false);
@@ -466,6 +646,9 @@ function AppShell() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Manual modal */}
+      {showManual && <HelpModal onClose={() => setShowManual(false)} />}
+
       {/* Toast */}
       {toast && (
         <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-sm font-medium ${toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
@@ -519,6 +702,17 @@ function AppShell() {
             >
               <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current stroke-2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+              </svg>
+            </button>
+
+            {/* Manual */}
+            <button
+              onClick={() => setShowManual(true)}
+              title="Manuale d'uso"
+              className="p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            >
+              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current stroke-2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
               </svg>
             </button>
 
