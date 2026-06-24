@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 
 interface TrackedApp {
@@ -18,16 +18,28 @@ interface TrackedApp {
   error: string | null;
 }
 
-const STORAGE_KEY = 'android-app-checker-apps';
+interface EmailSettings {
+  enabled: boolean;
+  recipientEmail: string;
+}
+
+interface UpdateEmailInfo {
+  name: string;
+  packageId: string;
+  icon: string | null;
+  oldVersion: string;
+  newVersion: string;
+}
+
+const APPS_KEY = 'android-app-checker-apps';
+const EMAIL_KEY = 'android-app-checker-email';
+const DEFAULT_EMAIL: EmailSettings = { enabled: false, recipientEmail: '' };
 
 function loadApps(): TrackedApp[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(APPS_KEY);
     if (!raw) return [];
-    return (JSON.parse(raw) as TrackedApp[]).map((a) => ({
-      ...a,
-      checking: false,
-    }));
+    return (JSON.parse(raw) as TrackedApp[]).map((a) => ({ ...a, checking: false }));
   } catch {
     return [];
   }
@@ -36,19 +48,15 @@ function loadApps(): TrackedApp[] {
 function saveApps(apps: TrackedApp[]) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const toSave = apps.map(({ checking, ...rest }) => rest);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  localStorage.setItem(APPS_KEY, JSON.stringify(toSave));
 }
 
 function extractPackageId(input: string): string | null {
   input = input.trim();
-  if (/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(input)) {
-    return input;
-  }
+  if (/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(input)) return input;
   try {
     const url = new URL(input);
-    if (url.hostname.includes('play.google.com')) {
-      return url.searchParams.get('id');
-    }
+    if (url.hostname.includes('play.google.com')) return url.searchParams.get('id');
   } catch {
     // not a url
   }
@@ -57,11 +65,11 @@ function extractPackageId(input: string): string | null {
 
 function formatDate(iso: string | null): string {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('it-IT', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
+  return new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 function StatusBadge({ app }: { app: TrackedApp }) {
@@ -75,10 +83,7 @@ function StatusBadge({ app }: { app: TrackedApp }) {
   }
   if (app.error) {
     return (
-      <span
-        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700"
-        title={app.error}
-      >
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700" title={app.error}>
         <span>⚠</span> Error
       </span>
     );
@@ -106,21 +111,104 @@ function StatusBadge({ app }: { app: TrackedApp }) {
 
 export default function Home() {
   const [apps, setApps] = useState<TrackedApp[]>([]);
+  const [emailSettings, setEmailSettings] = useState<EmailSettings>(DEFAULT_EMAIL);
+  // Ref keeps latest emailSettings accessible inside async functions without stale closure
+  const emailRef = useRef<EmailSettings>(DEFAULT_EMAIL);
+
+  const [showSettings, setShowSettings] = useState(false);
+  const [emailDraft, setEmailDraft] = useState('');
+  const [enabledDraft, setEnabledDraft] = useState(false);
+  const [testingEmail, setTestingEmail] = useState(false);
+
   const [input, setInput] = useState('');
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const [checkingAll, setCheckingAll] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
   useEffect(() => {
     setApps(loadApps());
+    try {
+      const raw = localStorage.getItem(EMAIL_KEY);
+      if (raw) {
+        const s = JSON.parse(raw) as EmailSettings;
+        setEmailSettings(s);
+        emailRef.current = s;
+        setEmailDraft(s.recipientEmail);
+        setEnabledDraft(s.enabled);
+      }
+    } catch {
+      // ignore corrupt settings
+    }
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    emailRef.current = emailSettings;
+  }, [emailSettings]);
+
+  const showToast = useCallback((type: 'success' | 'error', message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 4000);
   }, []);
 
   const persistApps = useCallback((updated: TrackedApp[]) => {
     setApps(updated);
     saveApps(updated);
   }, []);
+
+  function saveEmailConfig() {
+    if (enabledDraft && !isValidEmail(emailDraft.trim())) {
+      showToast('error', 'Enter a valid email address before enabling alerts');
+      return;
+    }
+    const settings: EmailSettings = { enabled: enabledDraft, recipientEmail: emailDraft.trim() };
+    localStorage.setItem(EMAIL_KEY, JSON.stringify(settings));
+    setEmailSettings(settings);
+    showToast('success', 'Email settings saved');
+  }
+
+  async function sendTestEmail() {
+    const recipient = emailDraft.trim();
+    if (!isValidEmail(recipient)) {
+      showToast('error', 'Enter a valid email address first');
+      return;
+    }
+    setTestingEmail(true);
+    try {
+      const res = await fetch('/api/send-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipientEmail: recipient, test: true }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (res.ok) {
+        showToast('success', 'Test email sent — check your inbox');
+      } else {
+        showToast('error', body.error ?? 'Failed to send test email');
+      }
+    } catch {
+      showToast('error', 'Network error while sending test email');
+    } finally {
+      setTestingEmail(false);
+    }
+  }
+
+  async function sendUpdateEmail(updates: UpdateEmailInfo[]) {
+    const settings = emailRef.current;
+    if (!settings.enabled || !settings.recipientEmail || updates.length === 0) return;
+    try {
+      await fetch('/api/send-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipientEmail: settings.recipientEmail, updates }),
+      });
+    } catch {
+      // email is best-effort, don't surface this error in UI
+    }
+  }
 
   async function fetchAppInfo(packageId: string) {
     const res = await fetch(`/api/check-version?packageId=${encodeURIComponent(packageId)}`);
@@ -142,7 +230,7 @@ export default function Home() {
     setAddError(null);
     const packageId = extractPackageId(input);
     if (!packageId) {
-      setAddError('Enter a valid Play Store URL or package ID (e.g. com.example.app)');
+      setAddError('Enter a valid Play Store URL or package ID (e.g. com.whatsapp)');
       return;
     }
     if (apps.some((a) => a.packageId === packageId)) {
@@ -175,16 +263,18 @@ export default function Home() {
     }
   }
 
-  async function checkOne(id: string) {
+  // Returns update info if an update was detected; null otherwise.
+  // silent=true skips the per-app email (used when checkAll sends a summary).
+  async function checkOne(id: string, silent = false): Promise<UpdateEmailInfo | null> {
     const app = apps.find((a) => a.id === id);
-    if (!app) return;
+    if (!app) return null;
 
-    setApps((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, checking: true, error: null } : a)),
-    );
+    setApps((prev) => prev.map((a) => (a.id === id ? { ...a, checking: true, error: null } : a)));
 
     try {
       const info = await fetchAppInfo(app.packageId);
+      const updateAvailable = info.version !== app.addedVersion;
+
       setApps((prev) => {
         const updated = prev.map((a) =>
           a.id === id
@@ -193,7 +283,7 @@ export default function Home() {
                 checking: false,
                 latestVersion: info.version,
                 lastChecked: new Date().toISOString(),
-                updateAvailable: info.version !== a.addedVersion,
+                updateAvailable,
                 error: null,
               }
             : a,
@@ -201,30 +291,62 @@ export default function Home() {
         saveApps(updated);
         return updated;
       });
+
+      if (!updateAvailable) return null;
+
+      const updateInfo: UpdateEmailInfo = {
+        name: app.name,
+        packageId: app.packageId,
+        icon: app.icon,
+        oldVersion: app.addedVersion,
+        newVersion: info.version,
+      };
+
+      if (!silent) {
+        await sendUpdateEmail([updateInfo]);
+        const s = emailRef.current;
+        if (s.enabled && s.recipientEmail) {
+          showToast('success', `Update found for ${app.name} — alert email sent`);
+        }
+      }
+
+      return updateInfo;
     } catch (err: unknown) {
       setApps((prev) => {
         const updated = prev.map((a) =>
           a.id === id
-            ? {
-                ...a,
-                checking: false,
-                error: err instanceof Error ? err.message : 'Unknown error',
-              }
+            ? { ...a, checking: false, error: err instanceof Error ? err.message : 'Unknown error' }
             : a,
         );
         saveApps(updated);
         return updated;
       });
+      return null;
     }
   }
 
   async function checkAll() {
     if (apps.length === 0 || checkingAll) return;
     setCheckingAll(true);
+    const foundUpdates: UpdateEmailInfo[] = [];
+
     for (const app of apps) {
-      await checkOne(app.id);
+      const update = await checkOne(app.id, true); // silent=true, we'll send one summary
+      if (update) foundUpdates.push(update);
       await new Promise((r) => setTimeout(r, 300));
     }
+
+    if (foundUpdates.length > 0) {
+      await sendUpdateEmail(foundUpdates);
+      const s = emailRef.current;
+      if (s.enabled && s.recipientEmail) {
+        showToast(
+          'success',
+          `${foundUpdates.length} update${foundUpdates.length > 1 ? 's' : ''} found — summary email sent`,
+        );
+      }
+    }
+
     setCheckingAll(false);
   }
 
@@ -238,6 +360,20 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Toast notification */}
+      {toast && (
+        <div
+          className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-sm font-medium transition-all ${
+            toast.type === 'success'
+              ? 'bg-green-600 text-white'
+              : 'bg-red-600 text-white'
+          }`}
+        >
+          <span>{toast.type === 'success' ? '✓' : '⚠'}</span>
+          {toast.message}
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 py-5 flex items-center gap-3">
@@ -247,20 +383,119 @@ export default function Home() {
             </svg>
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-800 leading-tight">
-              Android App Update Checker
-            </h1>
-            <p className="text-sm text-slate-500">
-              Monitor Google Play Store updates
-            </p>
+            <h1 className="text-xl font-bold text-slate-800 leading-tight">Android App Update Checker</h1>
+            <p className="text-sm text-slate-500">Monitor Google Play Store updates</p>
           </div>
-          {hasUpdates && (
-            <span className="ml-auto px-3 py-1 bg-amber-100 text-amber-800 text-xs font-semibold rounded-full border border-amber-200">
-              {apps.filter((a) => a.updateAvailable).length} update
-              {apps.filter((a) => a.updateAvailable).length !== 1 ? 's' : ''} available
-            </span>
-          )}
+
+          <div className="ml-auto flex items-center gap-2">
+            {hasUpdates && (
+              <span className="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-semibold rounded-full border border-amber-200">
+                {apps.filter((a) => a.updateAvailable).length} update
+                {apps.filter((a) => a.updateAvailable).length !== 1 ? 's' : ''} available
+              </span>
+            )}
+            {/* Settings toggle */}
+            <button
+              onClick={() => setShowSettings((v) => !v)}
+              title="Email alert settings"
+              className={`p-2 rounded-lg transition-colors ${
+                showSettings
+                  ? 'bg-slate-800 text-white'
+                  : emailSettings.enabled
+                    ? 'bg-green-50 text-green-700 border border-green-200'
+                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              {/* Bell icon */}
+              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current stroke-2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+              </svg>
+            </button>
+          </div>
         </div>
+
+        {/* Settings panel — inline below header */}
+        {showSettings && (
+          <div className="border-t border-slate-200 bg-slate-50">
+            <div className="max-w-5xl mx-auto px-4 py-5 space-y-4">
+              <h2 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-slate-500 stroke-2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                </svg>
+                Email Alert Settings
+              </h2>
+
+              {/* Enable toggle */}
+              <label className="flex items-center gap-3 cursor-pointer w-fit">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={enabledDraft}
+                    onChange={(e) => setEnabledDraft(e.target.checked)}
+                  />
+                  <div className={`w-10 h-6 rounded-full transition-colors ${enabledDraft ? 'bg-green-500' : 'bg-slate-300'}`} />
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${enabledDraft ? 'translate-x-5' : 'translate-x-1'}`} />
+                </div>
+                <span className="text-sm text-slate-700 font-medium">Send email alerts when updates are detected</span>
+              </label>
+
+              {/* Email input */}
+              <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+                <div className="flex-1 max-w-sm">
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Recipient email</label>
+                  <input
+                    type="email"
+                    value={emailDraft}
+                    onChange={(e) => setEmailDraft(e.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
+                  />
+                </div>
+                <div className="flex gap-2 sm:mt-5">
+                  <button
+                    onClick={saveEmailConfig}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={sendTestEmail}
+                    disabled={testingEmail}
+                    className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-lg border border-slate-300 transition disabled:opacity-60 flex items-center gap-1.5"
+                  >
+                    {testingEmail ? (
+                      <>
+                        <span className="w-3.5 h-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                        Sending…
+                      </>
+                    ) : (
+                      'Send test email'
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Info box */}
+              <div className="flex gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700 max-w-lg">
+                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-blue-500 stroke-2 shrink-0 mt-0.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                </svg>
+                <span>
+                  Requires the <code className="font-mono bg-blue-100 px-1 rounded">RESEND_API_KEY</code> environment
+                  variable. Get a free API key at{' '}
+                  <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="underline font-medium">
+                    resend.com
+                  </a>{' '}
+                  and add it to your Vercel project under{' '}
+                  <span className="font-medium">Settings → Environment Variables</span>.
+                  Optionally set <code className="font-mono bg-blue-100 px-1 rounded">RESEND_FROM_EMAIL</code> to use a
+                  custom verified sender address.
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-6">
@@ -271,10 +506,7 @@ export default function Home() {
             <input
               type="text"
               value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                setAddError(null);
-              }}
+              onChange={(e) => { setInput(e.target.value); setAddError(null); }}
               placeholder="Play Store URL or package ID (e.g. com.whatsapp)"
               disabled={adding}
               className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent disabled:opacity-60 transition"
@@ -310,12 +542,8 @@ export default function Home() {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold text-slate-700">
-                Tracked apps
-              </h2>
-              <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full font-medium">
-                {apps.length}
-              </span>
+              <h2 className="text-sm font-semibold text-slate-700">Tracked apps</h2>
+              <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full font-medium">{apps.length}</span>
             </div>
             {apps.length > 0 && (
               <button
@@ -348,9 +576,7 @@ export default function Home() {
                 </svg>
               </div>
               <p className="text-sm text-slate-500">No apps tracked yet.</p>
-              <p className="text-xs text-slate-400 mt-1">
-                Paste a Play Store URL above to get started.
-              </p>
+              <p className="text-xs text-slate-400 mt-1">Paste a Play Store URL above to get started.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -359,33 +585,19 @@ export default function Home() {
                   <tr className="bg-slate-50 text-left">
                     <th className="px-4 py-3 text-xs font-semibold text-slate-500 w-10" />
                     <th className="px-4 py-3 text-xs font-semibold text-slate-500">App</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-slate-500 hidden md:table-cell">
-                      Package ID
-                    </th>
-                    <th className="px-4 py-3 text-xs font-semibold text-slate-500 hidden sm:table-cell">
-                      Added on
-                    </th>
+                    <th className="px-4 py-3 text-xs font-semibold text-slate-500 hidden md:table-cell">Package ID</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-slate-500 hidden sm:table-cell">Added on</th>
                     <th className="px-4 py-3 text-xs font-semibold text-slate-500">Version</th>
                     <th className="px-4 py-3 text-xs font-semibold text-slate-500">Status</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-slate-500 text-right">
-                      Actions
-                    </th>
+                    <th className="px-4 py-3 text-xs font-semibold text-slate-500 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {apps.map((app) => (
                     <tr key={app.id} className="hover:bg-slate-50 transition-colors">
-                      {/* Icon */}
                       <td className="px-4 py-3">
                         {app.icon ? (
-                          <Image
-                            src={app.icon}
-                            alt={app.name}
-                            width={36}
-                            height={36}
-                            className="rounded-lg object-cover"
-                            unoptimized
-                          />
+                          <Image src={app.icon} alt={app.name} width={36} height={36} className="rounded-lg object-cover" unoptimized />
                         ) : (
                           <div className="w-9 h-9 rounded-lg bg-slate-200 flex items-center justify-center">
                             <svg viewBox="0 0 24 24" className="w-5 h-5 fill-slate-400">
@@ -394,21 +606,15 @@ export default function Home() {
                           </div>
                         )}
                       </td>
-
-                      {/* Name */}
                       <td className="px-4 py-3">
                         <div className="font-medium text-slate-800">{app.name}</div>
-                        {app.developer && (
-                          <div className="text-xs text-slate-400">{app.developer}</div>
-                        )}
+                        {app.developer && <div className="text-xs text-slate-400">{app.developer}</div>}
                         {app.lastChecked && (
                           <div className="text-xs text-slate-400 mt-0.5 hidden sm:block">
                             Checked {formatDate(app.lastChecked)}
                           </div>
                         )}
                       </td>
-
-                      {/* Package ID */}
                       <td className="px-4 py-3 hidden md:table-cell">
                         <a
                           href={`https://play.google.com/store/apps/details?id=${app.packageId}`}
@@ -419,37 +625,25 @@ export default function Home() {
                           {app.packageId}
                         </a>
                       </td>
-
-                      {/* Date added */}
                       <td className="px-4 py-3 hidden sm:table-cell">
                         <div className="text-slate-600">{formatDate(app.dateAdded)}</div>
                         <div className="text-xs text-slate-400">v{app.addedVersion}</div>
                       </td>
-
-                      {/* Version */}
                       <td className="px-4 py-3">
                         {app.latestVersion ? (
                           <div>
-                            <div className="font-mono text-slate-800 font-medium">
-                              {app.latestVersion}
-                            </div>
-                            {app.updateAvailable && app.addedVersion !== app.latestVersion && (
-                              <div className="text-xs text-slate-400 line-through">
-                                {app.addedVersion}
-                              </div>
+                            <div className="font-mono text-slate-800 font-medium">{app.latestVersion}</div>
+                            {app.updateAvailable && (
+                              <div className="text-xs text-slate-400 line-through">{app.addedVersion}</div>
                             )}
                           </div>
                         ) : (
                           <span className="text-slate-400 font-mono">{app.addedVersion}</span>
                         )}
                       </td>
-
-                      {/* Status */}
                       <td className="px-4 py-3">
                         <StatusBadge app={app} />
                       </td>
-
-                      {/* Actions */}
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <button
@@ -483,7 +677,10 @@ export default function Home() {
         </div>
 
         <p className="text-center text-xs text-slate-400">
-          Data is stored locally in your browser. App info is fetched from the Google Play Store.
+          Data stored locally in your browser · App info fetched from Google Play Store
+          {emailSettings.enabled && emailSettings.recipientEmail && (
+            <> · <span className="text-green-600">Email alerts active → {emailSettings.recipientEmail}</span></>
+          )}
         </p>
       </main>
     </div>
