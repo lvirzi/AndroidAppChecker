@@ -122,7 +122,13 @@ const T = {
     title: "Manuale d'uso",
     what: {
       h: "Cos'è questa applicazione",
-      p: ['Android App Update Checker', ' monitora le app Android sul Google Play Store e avvisa via email quando sono disponibili nuove versioni. Ogni utente ha una lista privata di app e impostazioni completamente separate dagli altri account.'],
+      p: 'Questo strumento monitora tre tipi di elementi e avvisa via email quando rileva cambiamenti:',
+      types: [
+        ['Android', 'aggiornamenti di app dal Google Play Store'],
+        ['iOS', "aggiornamenti di app dall'Apple App Store"],
+        ['Web', 'variazioni al contenuto di qualsiasi pagina web'],
+      ] as [string, string][],
+      tail: 'Ogni utente ha una lista privata completamente separata dagli altri account.',
     },
     access: {
       h: 'Accesso',
@@ -130,29 +136,33 @@ const T = {
       p2: " nella schermata iniziale. Ogni account Google ha dati completamente isolati dagli altri utenti.",
     },
     add: {
-      h: "Aggiungere un'app",
-      step1a: "Copia l'URL della pagina Play Store dell'app",
-      step1b: 'oppure il Package ID diretto',
-      step2: 'Incollalo nel campo ',
-      step2b: ' e clicca il pulsante verde.',
-      step3: "L'app recupera automaticamente nome, icona, sviluppatore e versione corrente dal Play Store.",
+      h: 'Aggiungere un elemento',
+      intro: 'Incolla uno dei seguenti formati nel campo — il tipo viene rilevato automaticamente:',
+      rows: [
+        ['Android', 'URL Play Store o Package ID', 'play.google.com/store/apps/details?id=com.app', 'com.app'],
+        ['iOS', 'URL App Store', 'apps.apple.com/us/app/nome/id310633997', ''],
+        ['Web', 'Qualsiasi URL HTTPS', 'https://esempio.com/pagina', ''],
+      ] as [string, string, string, string][],
+      step2: 'Clicca ',
+      step2b: " — nome, icona e dati vengono recuperati automaticamente.",
     },
     check: {
       h: 'Verificare gli aggiornamenti',
       single: 'Check singolo',
-      singleDesc: "— clicca il pulsante ↻ sulla riga di un'app per verificare immediatamente se c'è una nuova versione.",
+      singleDesc: "— clicca il pulsante ↻ sulla riga di un elemento per verificare immediatamente.",
       all: 'Check all',
-      allDesc: '— verifica tutte le app in sequenza. Al termine, se ci sono aggiornamenti e gli alert email sono attivi, viene inviata una email riepilogativa.',
-      badge: 'Lo stato viene indicato con un badge colorato:',
+      allDesc: '— verifica tutti gli elementi in sequenza. Al termine, se ci sono novità e gli alert email sono attivi, viene inviata una email riepilogativa.',
+      badgeApps: 'Badge per app (Android/iOS):',
+      badgeWeb: 'Badge per siti web:',
       or: 'oppure',
     },
     cron: {
       h: 'Controllo automatico (Cron)',
       p1a: 'Il sistema esegue automaticamente un controllo ogni giorno alle ',
-      p1b: ' per tutti gli utenti registrati. Se vengono trovate nuove versioni, viene inviata una email riepilogativa a ciascun utente che ha gli alert attivi.',
+      p1b: ' per tutti gli utenti registrati. Se vengono trovate novità, viene inviata una email riepilogativa a ciascun utente che ha gli alert attivi.',
       p2a: 'Il pulsante ',
       p2b: " nell'header esegue immediatamente il controllo per l'utente corrente, senza aspettare l'orario schedulato. È utile per testare gli alert o forzare un aggiornamento immediato dei dati.",
-      warn: "Lo stesso aggiornamento viene notificato via email una sola volta: una volta inviato l'alert per la versione X, non viene ripetuto finché non esce la versione Y.",
+      warn: "La stessa novità viene notificata via email una sola volta. Per le app viene confrontata la versione; per i siti web viene confrontato l'hash del contenuto.",
     },
     email: {
       h: 'Alert email',
@@ -168,16 +178,22 @@ const T = {
     },
     privacy: {
       h: 'Privacy e dati',
-      p: 'La lista delle app e le impostazioni di ogni utente sono salvate privatamente su ',
-      pb: '. Nessun altro utente può vedere o modificare i tuoi dati. Per rimuovere i tuoi dati, elimina tutte le app dalla lista.',
+      p: 'La lista degli elementi e le impostazioni di ogni utente sono salvati privatamente su ',
+      pb: '. Nessun altro utente può vedere o modificare i tuoi dati. Per rimuovere i tuoi dati, elimina tutti gli elementi dalla lista.',
     },
-    footer: 'Android App Update Checker · dati da Google Play Store · invio email via Resend',
+    footer: 'Update Checker · Android · iOS · Web · invio email via Resend',
   },
   en: {
     title: 'User Manual',
     what: {
       h: 'About this application',
-      p: ['Android App Update Checker', ' monitors Android apps on the Google Play Store and notifies you by email when new versions are available. Each user has a private app list and settings completely separate from other accounts.'],
+      p: 'This tool monitors three types of items and notifies you by email when changes are detected:',
+      types: [
+        ['Android', 'app updates from the Google Play Store'],
+        ['iOS', 'app updates from the Apple App Store'],
+        ['Web', 'content changes on any web page'],
+      ] as [string, string][],
+      tail: 'Each user has a private list completely separate from other accounts.',
     },
     access: {
       h: 'Sign in',
@@ -185,29 +201,33 @@ const T = {
       p2: ' on the start screen. Each Google account has data completely isolated from other users.',
     },
     add: {
-      h: 'Adding an app',
-      step1a: 'Copy the Play Store URL of the app',
-      step1b: 'or the Package ID directly',
-      step2: 'Paste it in the ',
-      step2b: ' field and click the green button.',
-      step3: 'The app automatically retrieves the name, icon, developer and current version from the Play Store.',
+      h: 'Adding an item',
+      intro: 'Paste one of the following formats — the type is detected automatically:',
+      rows: [
+        ['Android', 'Play Store URL or Package ID', 'play.google.com/store/apps/details?id=com.app', 'com.app'],
+        ['iOS', 'App Store URL', 'apps.apple.com/us/app/name/id310633997', ''],
+        ['Web', 'Any HTTPS URL', 'https://example.com/page', ''],
+      ] as [string, string, string, string][],
+      step2: 'Click ',
+      step2b: ' — name, icon and data are retrieved automatically.',
     },
     check: {
       h: 'Checking for updates',
       single: 'Single check',
-      singleDesc: '— click the ↻ button on an app row to immediately check for a new version.',
+      singleDesc: '— click the ↻ button on an item row to check immediately.',
       all: 'Check all',
-      allDesc: '— checks all apps in sequence. When done, if there are updates and email alerts are enabled, a summary email is sent.',
-      badge: 'Status is shown with a coloured badge:',
+      allDesc: '— checks all items in sequence. When done, if there are new findings and email alerts are enabled, a summary email is sent.',
+      badgeApps: 'Badge for apps (Android/iOS):',
+      badgeWeb: 'Badge for websites:',
       or: 'or',
     },
     cron: {
       h: 'Automatic check (Cron)',
       p1a: 'The system automatically runs a check every day at ',
-      p1b: ' for all registered users. If new versions are found, a summary email is sent to each user with alerts enabled.',
+      p1b: ' for all registered users. If new findings are detected, a summary email is sent to each user with alerts enabled.',
       p2a: 'The ',
       p2b: ' button in the header immediately runs the check for the current user, without waiting for the scheduled time. Useful for testing alerts or forcing an immediate data refresh.',
-      warn: 'The same update is only notified once by email: once an alert is sent for version X, it will not repeat until version Y is released.',
+      warn: 'The same finding is only notified once by email. For apps the version is compared; for websites the content hash is compared.',
     },
     email: {
       h: 'Email alerts',
@@ -223,10 +243,10 @@ const T = {
     },
     privacy: {
       h: 'Privacy & data',
-      p: "Each user's app list and settings are saved privately on ",
-      pb: '. No other user can view or modify your data. To remove your data, delete all apps from the list.',
+      p: "Each user's items and settings are saved privately on ",
+      pb: '. No other user can view or modify your data. To remove your data, delete all items from the list.',
     },
-    footer: 'Android App Update Checker · data from Google Play Store · email via Resend',
+    footer: 'Update Checker · Android · iOS · Web · email via Resend',
   },
 } as const;
 
@@ -296,10 +316,17 @@ function HelpModal({ onClose }: { onClose: () => void }) {
 
           {/* What */}
           <section>
-            <h3 className="font-semibold text-slate-900 mb-1.5">{t.what.h}</h3>
-            <p className="text-slate-600 leading-relaxed">
-              <strong>{t.what.p[0]}</strong>{t.what.p[1]}
-            </p>
+            <h3 className="font-semibold text-slate-900 mb-2">{t.what.h}</h3>
+            <p className="text-slate-600 leading-relaxed mb-2">{t.what.p}</p>
+            <div className="space-y-1.5">
+              {t.what.types.map(([label, desc]) => (
+                <div key={label} className="flex items-center gap-2">
+                  <SourceTypeBadge type={label.toLowerCase() as 'android' | 'ios' | 'web'} />
+                  <span className="text-slate-600 text-xs">{desc}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-slate-500 text-xs mt-2">{t.what.tail}</p>
           </section>
 
           {/* Access */}
@@ -310,24 +337,30 @@ function HelpModal({ onClose }: { onClose: () => void }) {
             </p>
           </section>
 
-          {/* Add app */}
+          {/* Add item */}
           <section>
             <h3 className="font-semibold text-slate-900 mb-2">{t.add.h}</h3>
-            <ol className="space-y-1.5 text-slate-600 list-decimal list-inside leading-relaxed">
-              <li>
-                {t.add.step1a}
-                <span className="ml-1 font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">
-                  play.google.com/store/apps/details?id=com.example
-                </span>
-                <br />
-                {t.add.step1b}
-                <span className="ml-1 font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">
-                  com.example
-                </span>
-              </li>
-              <li>{t.add.step2}<span className="font-medium">Add an app</span>{t.add.step2b}</li>
-              <li>{t.add.step3}</li>
-            </ol>
+            <p className="text-slate-600 mb-2">{t.add.intro}</p>
+            <div className="rounded-lg border border-slate-200 overflow-hidden mb-3">
+              {t.add.rows.map(([type, desc, example, alt]) => (
+                <div key={type} className="flex items-start gap-3 px-3 py-2.5 border-b border-slate-100 last:border-0">
+                  <div className="shrink-0 mt-0.5">
+                    <SourceTypeBadge type={type.toLowerCase() as 'android' | 'ios' | 'web'} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs text-slate-500 mb-0.5">{desc}</div>
+                    <code className="text-xs font-mono text-slate-700 break-all">{example}</code>
+                    {alt && (
+                      <><span className="text-slate-400 mx-1 text-xs">·</span>
+                      <code className="text-xs font-mono text-slate-700">{alt}</code></>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-slate-600 text-xs">
+              {t.add.step2}<span className="font-medium">Add an app</span>{t.add.step2b}
+            </p>
           </section>
 
           {/* Check updates */}
@@ -345,12 +378,20 @@ function HelpModal({ onClose }: { onClose: () => void }) {
               <p>
                 <span className="font-medium text-slate-700">Check all</span>{' '}{t.check.allDesc}
               </p>
-              <p>
-                {t.check.badge}{' '}
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">✓ Up to date</span>
-                {' '}{t.check.or}{' '}
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">↑ Update available</span>
-              </p>
+              <div className="space-y-1.5 pt-1">
+                <p className="text-xs text-slate-500 font-medium">{t.check.badgeApps}</p>
+                <p>
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">✓ Up to date</span>
+                  {' '}{t.check.or}{' '}
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">↑ Update available</span>
+                </p>
+                <p className="text-xs text-slate-500 font-medium mt-1">{t.check.badgeWeb}</p>
+                <p>
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">✓ No changes</span>
+                  {' '}{t.check.or}{' '}
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">↑ Content changed</span>
+                </p>
+              </div>
             </div>
           </section>
 
