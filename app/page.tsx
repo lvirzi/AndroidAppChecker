@@ -1045,8 +1045,8 @@ function AppShell() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50 text-left">
-                    <th className="px-2 py-3 text-xs font-semibold text-slate-500 w-[184px]" />
-                    <th className="px-4 py-3 text-xs font-semibold text-slate-500">App</th>
+                    <th className="px-2 py-3 text-xs font-semibold text-slate-500 w-[72px]" />
+                    <th className="px-4 py-3 text-xs font-semibold text-slate-500 min-w-[220px]">Name</th>
                     <th className="px-4 py-3 text-xs font-semibold text-slate-500 hidden md:table-cell">Package ID</th>
                     <th className="px-4 py-3 text-xs font-semibold text-slate-500 hidden sm:table-cell">Added on</th>
                     <th className="px-4 py-3 text-xs font-semibold text-slate-500">Version</th>
@@ -1058,7 +1058,7 @@ function AppShell() {
                   {apps.map((app) => (
                     <tr key={app.id} className="hover:bg-slate-50 transition-colors">
                       {/* Icon + type badge */}
-                      <td className="px-2 py-2">
+                      <td className="px-2 pt-2 pb-4">
                         <div className="relative inline-block">
                           {app.icon ? (
                             <Image
@@ -1090,8 +1090,8 @@ function AppShell() {
                               )}
                             </div>
                           )}
-                          {/* Source type badge — bottom-right corner of icon */}
-                          <div className="absolute bottom-1.5 right-1.5">
+                          {/* Source type badge — sticks out from the bottom-right corner */}
+                          <div className="absolute -bottom-2 -right-1 z-10">
                             <SourceTypeBadge type={app.sourceType} />
                           </div>
                         </div>
