@@ -853,34 +853,28 @@ function AppShell() {
       const chunk = allApps.slice(i, i + concurrency);
       const chunkIds = new Set(chunk.map((a) => a.id));
 
-      // Mark chunk as checking
-      setApps((prev) => {
-        const updated = prev.map((a) =>
-          chunkIds.has(a.id) ? { ...a, checking: true, error: null } : a,
-        );
-        appsRef.current = updated;
-        return updated;
-      });
+      // Mark chunk as checking (UI only — compute directly from ref, no save)
+      const markingChecking = appsRef.current.map((a) =>
+        chunkIds.has(a.id) ? { ...a, checking: true, error: null } : a,
+      );
+      appsRef.current = markingChecking;
+      setApps(markingChecking);
 
       // Fetch all in parallel
       const results = await Promise.allSettled(chunk.map(checkOneBatch));
 
-      // Apply all results atomically
-      let chunkFinalApps: TrackedApp[] = [];
-      setApps((prev) => {
-        let updated = [...prev];
-        for (const r of results) {
-          if (r.status !== 'fulfilled') continue;
-          const { id, updatedApp, updateInfo } = r.value;
-          updated = updated.map((a) => (a.id === id ? updatedApp : a));
-          if (updateInfo) found.push(updateInfo);
-        }
-        chunkFinalApps = updated;
-        appsRef.current = updated;
-        return updated;
-      });
-
-      save(chunkFinalApps, emailRef.current);
+      // Apply all results — compute directly from ref so save() always
+      // receives the definitive array, regardless of React batching timing
+      let updated = [...appsRef.current];
+      for (const r of results) {
+        if (r.status !== 'fulfilled') continue;
+        const { id, updatedApp, updateInfo } = r.value;
+        updated = updated.map((a) => (a.id === id ? updatedApp : a));
+        if (updateInfo) found.push(updateInfo);
+      }
+      appsRef.current = updated;
+      setApps(updated);
+      save(updated, emailRef.current);
     }
 
     if (found.length > 0) {
