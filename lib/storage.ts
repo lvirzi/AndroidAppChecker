@@ -1,4 +1,4 @@
-import { list, put, del, get } from '@vercel/blob';
+import { list, put, get } from '@vercel/blob';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -48,10 +48,6 @@ const EMPTY = (): AppData => ({
   emailSettings: { enabled: false, recipientEmail: '' },
 });
 
-/** UUID v4 pattern — identifies blobs saved under old random-UUID user paths. */
-const UUID_PATH_RE =
-  /android-app-checker\/users\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\/data\.json$/i;
-
 async function fetchBlobJson(url: string): Promise<AppData | null> {
   // Use the SDK's get() — it handles auth (Bearer token via undici) correctly
   // for private stores. Native fetch() returns 403 on private blob URLs.
@@ -70,32 +66,12 @@ async function fetchBlobJson(url: string): Promise<AppData | null> {
 // ─── Per-user CRUD ────────────────────────────────────────────────────────────
 
 export async function readUserData(userId: string): Promise<AppData> {
-  // 1. Try the stable path (Google account ID)
   const { blobs } = await list({ prefix: getUserPath(userId), limit: 1 });
-  if (blobs.length > 0) {
-    const data = await fetchBlobJson(blobs[0].url);
-    if (data) return data;
-    throw new Error(`Blob read failed for user ${userId}`);
-  }
+  if (blobs.length === 0) return EMPTY();
 
-  // 2. No data at stable path — look for orphaned UUID-format blobs.
-  //    Auth.js v5 without a database used to generate a random UUID per
-  //    sign-in, so stored data ends up at an unreachable path.
-  //    If exactly ONE such blob exists it's safe to migrate it here.
-  const { blobs: all } = await list({ prefix: 'android-app-checker/users/' });
-  const uuidBlobs = all.filter((b) => UUID_PATH_RE.test(b.pathname));
-
-  if (uuidBlobs.length === 1) {
-    console.log(`[storage] migrating orphaned UUID blob → ${getUserPath(userId)}`);
-    const data = await fetchBlobJson(uuidBlobs[0].url);
-    if (data) {
-      await writeUserData(userId, data);
-      await del(uuidBlobs[0].url).catch(() => {});
-      return data;
-    }
-  }
-
-  return EMPTY();
+  const data = await fetchBlobJson(blobs[0].url);
+  if (data) return data;
+  throw new Error(`Blob read failed for user ${userId}`);
 }
 
 export async function writeUserData(userId: string, data: AppData): Promise<void> {
