@@ -557,6 +557,7 @@ function AppShell() {
 
   const [showSettings, setShowSettings] = useState(false);
   const [showManual, setShowManual] = useState(false);
+  const [showSignOutMenu, setShowSignOutMenu] = useState(false);
   const [emailDraft, setEmailDraft] = useState('');
   const [enabledDraft, setEnabledDraft] = useState(false);
   const [testingEmail, setTestingEmail] = useState(false);
@@ -1030,11 +1031,12 @@ function AppShell() {
             </button>
 
             {/* User avatar + logout */}
-            <div className="flex items-center gap-2 pl-1 border-l border-slate-200 ml-1">
+            {/* Avatar + sign-out dropdown */}
+            <div className="relative pl-1 border-l border-slate-200 ml-1">
               <button
-                onClick={() => signOut()}
-                title="Sign out"
-                className="rounded-full hover:ring-2 hover:ring-slate-300 active:ring-red-300 transition-all shrink-0"
+                onClick={(e) => { e.stopPropagation(); setShowSignOutMenu((v) => !v); }}
+                title="Account"
+                className="rounded-full hover:ring-2 hover:ring-slate-300 transition-all shrink-0 block"
               >
                 {session?.user?.image ? (
                   <Image
@@ -1053,13 +1055,42 @@ function AppShell() {
                   </div>
                 )}
               </button>
-              <button
-                onClick={() => signOut()}
-                className="text-xs text-slate-500 hover:text-slate-700 transition hidden sm:block"
-                title="Sign out"
-              >
-                Sign out
-              </button>
+
+              {showSignOutMenu && (
+                <>
+                  {/* Backdrop — closes menu on outside tap */}
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowSignOutMenu(false)}
+                  />
+                  <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
+                    <div className="px-3 py-2.5 border-b border-slate-100">
+                      <p className="text-xs font-medium text-slate-700 truncate">
+                        {session?.user?.name ?? 'Signed in'}
+                      </p>
+                      <p className="text-xs text-slate-400 truncate">{session?.user?.email}</p>
+                    </div>
+                    <button
+                      onClick={() => signOut()}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 active:bg-red-100 transition-colors text-left"
+                    >
+                      <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                      </svg>
+                      Sign out
+                    </button>
+                    <button
+                      onClick={() => setShowSignOutMenu(false)}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-slate-600 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left"
+                    >
+                      <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                      </svg>
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -1181,7 +1212,7 @@ function AppShell() {
               <table className="w-full text-sm table-fixed">
                 <thead>
                   <tr className="bg-slate-50 text-left">
-                    <th className="px-2 py-3 text-xs font-semibold text-slate-500 w-10 sm:w-[72px]" />
+                    <th className="px-2 py-3 text-xs font-semibold text-slate-500 w-[46px] sm:w-[72px]" />
                     <th className="px-4 py-3 text-xs font-semibold text-slate-500">Name</th>
                     <th className="px-4 py-3 text-xs font-semibold text-slate-500 hidden md:table-cell w-[180px]">Package ID</th>
                     <th className="px-4 py-3 text-xs font-semibold text-slate-500 hidden sm:table-cell w-[100px]">Added on</th>
@@ -1202,11 +1233,11 @@ function AppShell() {
                               alt={app.name}
                               width={56}
                               height={56}
-                              className="rounded-lg object-cover w-8 h-8 sm:w-14 sm:h-14 sm:rounded-xl"
+                              className="rounded-lg object-cover w-10 h-10 sm:w-14 sm:h-14 sm:rounded-xl"
                               unoptimized
                             />
                           ) : (
-                            <div className={`w-8 h-8 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl flex items-center justify-center ${
+                            <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl flex items-center justify-center ${
                               app.sourceType === 'ios' ? 'bg-slate-800' :
                               app.sourceType === 'web' ? 'bg-blue-600' :
                               'bg-slate-200'
@@ -1227,7 +1258,7 @@ function AppShell() {
                             </div>
                           )}
                           {/* Source type badge — sticks out from the bottom-right corner */}
-                          <div className="absolute -bottom-1.5 -right-0.5 sm:-bottom-2 sm:-right-1 z-10 scale-75 sm:scale-100 origin-bottom-right">
+                          <div className="absolute -bottom-1.5 -right-0.5 sm:-bottom-2 sm:-right-1 z-10 scale-[0.8] sm:scale-100 origin-bottom-right">
                             <SourceTypeBadge type={app.sourceType} />
                           </div>
                         </div>
