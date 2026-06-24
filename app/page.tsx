@@ -92,7 +92,162 @@ function StatusBadge({ app }: { app: TrackedApp }) {
 
 // ─── Help modal ───────────────────────────────────────────────────────────────
 
+// ─── Help modal translations ──────────────────────────────────────────────────
+
+type Lang = 'it' | 'en';
+
+const T = {
+  it: {
+    title: "Manuale d'uso",
+    what: {
+      h: "Cos'è questa applicazione",
+      p: ['Android App Update Checker', ' monitora le app Android sul Google Play Store e avvisa via email quando sono disponibili nuove versioni. Ogni utente ha una lista privata di app e impostazioni completamente separate dagli altri account.'],
+    },
+    access: {
+      h: 'Accesso',
+      p1: "L'applicazione richiede il login con un account Google. Clicca su ",
+      p2: " nella schermata iniziale. Ogni account Google ha dati completamente isolati dagli altri utenti.",
+    },
+    add: {
+      h: "Aggiungere un'app",
+      step1a: "Copia l'URL della pagina Play Store dell'app",
+      step1b: 'oppure il Package ID diretto',
+      step2: 'Incollalo nel campo ',
+      step2b: ' e clicca il pulsante verde.',
+      step3: "L'app recupera automaticamente nome, icona, sviluppatore e versione corrente dal Play Store.",
+    },
+    check: {
+      h: 'Verificare gli aggiornamenti',
+      single: 'Check singolo',
+      singleDesc: "— clicca il pulsante ↻ sulla riga di un'app per verificare immediatamente se c'è una nuova versione.",
+      all: 'Check all',
+      allDesc: '— verifica tutte le app in sequenza. Al termine, se ci sono aggiornamenti e gli alert email sono attivi, viene inviata una email riepilogativa.',
+      badge: 'Lo stato viene indicato con un badge colorato:',
+      or: 'oppure',
+    },
+    cron: {
+      h: 'Controllo automatico (Cron)',
+      p1a: 'Il sistema esegue automaticamente un controllo ogni giorno alle ',
+      p1b: ' per tutti gli utenti registrati. Se vengono trovate nuove versioni, viene inviata una email riepilogativa a ciascun utente che ha gli alert attivi.',
+      p2a: 'Il pulsante ',
+      p2b: " nell'header esegue immediatamente il controllo per l'utente corrente, senza aspettare l'orario schedulato. È utile per testare gli alert o forzare un aggiornamento immediato dei dati.",
+      warn: "Lo stesso aggiornamento viene notificato via email una sola volta: una volta inviato l'alert per la versione X, non viene ripetuto finché non esce la versione Y.",
+    },
+    email: {
+      h: 'Alert email',
+      intro: "Clicca sull'icona 🔔 nell'header per aprire le impostazioni:",
+      s1: 'Attiva il toggle ',
+      s2: "Inserisci l'indirizzo email dove ricevere le notifiche",
+      s3: 'Clicca ',
+      s4: 'Usa ',
+      s4b: ' per verificare che la configurazione funzioni',
+      info: 'Gli alert richiedono la variabile d\'ambiente ',
+      infob: ' configurata nel progetto Vercel. Registrati su ',
+      infoc: ' per ottenere una chiave gratuita.',
+    },
+    privacy: {
+      h: 'Privacy e dati',
+      p: 'La lista delle app e le impostazioni di ogni utente sono salvate privatamente su ',
+      pb: '. Nessun altro utente può vedere o modificare i tuoi dati. Per rimuovere i tuoi dati, elimina tutte le app dalla lista.',
+    },
+    env: {
+      h: "Variabili d'ambiente richieste",
+      vars: [
+        ['GOOGLE_CLIENT_ID', 'Client ID OAuth da Google Cloud Console'],
+        ['GOOGLE_CLIENT_SECRET', 'Client Secret OAuth da Google Cloud Console'],
+        ['AUTH_SECRET', 'Stringa random per firmare i JWT (openssl rand -base64 32)'],
+        ['BLOB_READ_WRITE_TOKEN', 'Impostato automaticamente da Vercel Blob'],
+        ['RESEND_API_KEY', 'Chiave API Resend per gli alert email (opzionale)'],
+        ['RESEND_FROM_EMAIL', 'Indirizzo mittente personalizzato (opzionale)'],
+        ['CRON_SECRET', 'Protezione endpoint cron da accessi non autorizzati (opzionale)'],
+      ] as [string, string][],
+    },
+    footer: 'Android App Update Checker · dati da Google Play Store · invio email via Resend',
+  },
+  en: {
+    title: 'User Manual',
+    what: {
+      h: 'About this application',
+      p: ['Android App Update Checker', ' monitors Android apps on the Google Play Store and notifies you by email when new versions are available. Each user has a private app list and settings completely separate from other accounts.'],
+    },
+    access: {
+      h: 'Sign in',
+      p1: 'The application requires a Google account. Click ',
+      p2: ' on the start screen. Each Google account has data completely isolated from other users.',
+    },
+    add: {
+      h: 'Adding an app',
+      step1a: 'Copy the Play Store URL of the app',
+      step1b: 'or the Package ID directly',
+      step2: 'Paste it in the ',
+      step2b: ' field and click the green button.',
+      step3: 'The app automatically retrieves the name, icon, developer and current version from the Play Store.',
+    },
+    check: {
+      h: 'Checking for updates',
+      single: 'Single check',
+      singleDesc: '— click the ↻ button on an app row to immediately check for a new version.',
+      all: 'Check all',
+      allDesc: '— checks all apps in sequence. When done, if there are updates and email alerts are enabled, a summary email is sent.',
+      badge: 'Status is shown with a coloured badge:',
+      or: 'or',
+    },
+    cron: {
+      h: 'Automatic check (Cron)',
+      p1a: 'The system automatically runs a check every day at ',
+      p1b: ' for all registered users. If new versions are found, a summary email is sent to each user with alerts enabled.',
+      p2a: 'The ',
+      p2b: ' button in the header immediately runs the check for the current user, without waiting for the scheduled time. Useful for testing alerts or forcing an immediate data refresh.',
+      warn: 'The same update is only notified once by email: once an alert is sent for version X, it will not repeat until version Y is released.',
+    },
+    email: {
+      h: 'Email alerts',
+      intro: 'Click the 🔔 icon in the header to open the settings:',
+      s1: 'Enable the toggle ',
+      s2: 'Enter the email address to receive notifications',
+      s3: 'Click ',
+      s4: 'Use ',
+      s4b: ' to verify the configuration works',
+      info: 'Alerts require the ',
+      infob: ' environment variable configured in the Vercel project. Sign up at ',
+      infoc: ' for a free key.',
+    },
+    privacy: {
+      h: 'Privacy & data',
+      p: "Each user's app list and settings are saved privately on ",
+      pb: '. No other user can view or modify your data. To remove your data, delete all apps from the list.',
+    },
+    env: {
+      h: 'Required environment variables',
+      vars: [
+        ['GOOGLE_CLIENT_ID', 'OAuth Client ID from Google Cloud Console'],
+        ['GOOGLE_CLIENT_SECRET', 'OAuth Client Secret from Google Cloud Console'],
+        ['AUTH_SECRET', 'Random string to sign JWTs (openssl rand -base64 32)'],
+        ['BLOB_READ_WRITE_TOKEN', 'Set automatically by Vercel Blob'],
+        ['RESEND_API_KEY', 'Resend API key for email alerts (optional)'],
+        ['RESEND_FROM_EMAIL', 'Custom sender address (optional)'],
+        ['CRON_SECRET', 'Protects the cron endpoint from unauthorised access (optional)'],
+      ] as [string, string][],
+    },
+    footer: 'Android App Update Checker · data from Google Play Store · email via Resend',
+  },
+} as const;
+
 function HelpModal({ onClose }: { onClose: () => void }) {
+  const [lang, setLang] = useState<Lang>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('help-lang') as Lang) ?? 'it';
+    }
+    return 'it';
+  });
+
+  function switchLang(l: Lang) {
+    setLang(l);
+    localStorage.setItem('help-lang', l);
+  }
+
+  const t = T[lang];
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
@@ -101,152 +256,155 @@ function HelpModal({ onClose }: { onClose: () => void }) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center">
-              <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-none stroke-white stroke-2">
+            <div className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center shrink-0">
+              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-white stroke-2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
               </svg>
             </div>
-            <h2 className="text-base font-bold text-slate-800">Manuale d&apos;uso</h2>
+            <h2 className="text-base font-bold text-slate-800">{t.title}</h2>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-          >
-            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current stroke-2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
-          </button>
+
+          <div className="flex items-center gap-2">
+            {/* Language toggle */}
+            <div className="flex items-center bg-slate-100 rounded-lg p-1">
+              {(['it', 'en'] as const).map((l) => (
+                <button
+                  key={l}
+                  onClick={() => switchLang(l)}
+                  className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
+                    lang === l
+                      ? 'bg-white text-slate-800 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  {l.toUpperCase()}
+                </button>
+              ))}
+            </div>
+
+            {/* Close */}
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            >
+              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current stroke-2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Scrollable content */}
         <div className="overflow-y-auto px-6 py-5 space-y-6 text-sm text-slate-700">
 
+          {/* What */}
           <section>
-            <h3 className="font-semibold text-slate-900 mb-1.5">Cos&apos;è questa applicazione</h3>
+            <h3 className="font-semibold text-slate-900 mb-1.5">{t.what.h}</h3>
             <p className="text-slate-600 leading-relaxed">
-              <strong>Android App Update Checker</strong> monitora le app Android sul Google Play Store e
-              avvisa via email quando sono disponibili nuove versioni. Ogni utente ha una lista privata
-              di app e impostazioni completamente separate dagli altri account.
+              <strong>{t.what.p[0]}</strong>{t.what.p[1]}
             </p>
           </section>
 
+          {/* Access */}
           <section>
-            <h3 className="font-semibold text-slate-900 mb-1.5">Accesso</h3>
+            <h3 className="font-semibold text-slate-900 mb-1.5">{t.access.h}</h3>
             <p className="text-slate-600 leading-relaxed">
-              L&apos;applicazione richiede il login con un account Google. Clicca su{' '}
-              <span className="font-medium">Sign in with Google</span> nella schermata iniziale.
-              Ogni account Google ha dati completamente isolati dagli altri utenti.
+              {t.access.p1}<span className="font-medium">Sign in with Google</span>{t.access.p2}
             </p>
           </section>
 
+          {/* Add app */}
           <section>
-            <h3 className="font-semibold text-slate-900 mb-2">Aggiungere un&apos;app</h3>
+            <h3 className="font-semibold text-slate-900 mb-2">{t.add.h}</h3>
             <ol className="space-y-1.5 text-slate-600 list-decimal list-inside leading-relaxed">
               <li>
-                Copia l&apos;URL della pagina Play Store dell&apos;app
+                {t.add.step1a}
                 <span className="ml-1 font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">
-                  play.google.com/store/apps/details?id=com.esempio
+                  play.google.com/store/apps/details?id=com.example
                 </span>
                 <br />
-                oppure il Package ID diretto
+                {t.add.step1b}
                 <span className="ml-1 font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">
-                  com.esempio
+                  com.example
                 </span>
               </li>
-              <li>Incollalo nel campo <span className="font-medium">Add an app</span> e clicca il pulsante verde.</li>
-              <li>L&apos;app recupera automaticamente nome, icona, sviluppatore e versione corrente dal Play Store.</li>
+              <li>{t.add.step2}<span className="font-medium">Add an app</span>{t.add.step2b}</li>
+              <li>{t.add.step3}</li>
             </ol>
           </section>
 
+          {/* Check updates */}
           <section>
-            <h3 className="font-semibold text-slate-900 mb-2">Verificare gli aggiornamenti</h3>
+            <h3 className="font-semibold text-slate-900 mb-2">{t.check.h}</h3>
             <div className="space-y-2 text-slate-600 leading-relaxed">
               <p>
                 <span className="inline-flex items-center gap-1 font-medium text-slate-700">
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 0 0 4.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 0 1-15.357-2m15.357 2H15" /></svg>
-                  Check singolo
-                </span>{' '}
-                — clicca il pulsante ↻ sulla riga di un&apos;app per verificare immediatamente se c&apos;è una nuova versione.
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 shrink-0">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 0 0 4.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 0 1-15.357-2m15.357 2H15" />
+                  </svg>
+                  {t.check.single}
+                </span>{' '}{t.check.singleDesc}
               </p>
               <p>
-                <span className="font-medium text-slate-700">Check all</span>{' '}
-                — verifica tutte le app in sequenza. Al termine, se ci sono aggiornamenti e gli alert email sono attivi, viene inviata una email riepilogativa.
+                <span className="font-medium text-slate-700">Check all</span>{' '}{t.check.allDesc}
               </p>
               <p>
-                Lo stato viene indicato con un badge colorato:{' '}
+                {t.check.badge}{' '}
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">✓ Up to date</span>
-                {' '}oppure{' '}
+                {' '}{t.check.or}{' '}
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">↑ Update available</span>
               </p>
             </div>
           </section>
 
+          {/* Cron */}
           <section>
-            <h3 className="font-semibold text-slate-900 mb-2">Controllo automatico (Cron)</h3>
+            <h3 className="font-semibold text-slate-900 mb-2">{t.cron.h}</h3>
             <div className="space-y-2 text-slate-600 leading-relaxed">
-              <p>
-                Il sistema esegue automaticamente un controllo ogni giorno alle{' '}
-                <strong>08:00 UTC</strong> per tutti gli utenti registrati. Se vengono trovate nuove
-                versioni, viene inviata una email riepilogativa a ciascun utente che ha gli alert attivi.
-              </p>
-              <p>
-                Il pulsante <span className="font-medium text-slate-700">Run cron now</span> nell&apos;header
-                esegue immediatamente il controllo per l&apos;utente corrente, senza aspettare l&apos;orario
-                schedulato. È utile per testare gli alert o forzare un aggiornamento immediato dei dati.
-              </p>
+              <p>{t.cron.p1a}<strong>08:00 UTC</strong>{t.cron.p1b}</p>
+              <p>{t.cron.p2a}<span className="font-medium text-slate-700">Run cron now</span>{t.cron.p2b}</p>
               <div className="flex gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
                 <span className="shrink-0">⚠</span>
-                <span>
-                  Lo stesso aggiornamento viene notificato via email una sola volta: una volta inviato
-                  l&apos;alert per la versione X, non viene ripetuto finché non esce la versione Y.
-                </span>
+                <span>{t.cron.warn}</span>
               </div>
             </div>
           </section>
 
+          {/* Email alerts */}
           <section>
-            <h3 className="font-semibold text-slate-900 mb-2">Alert email</h3>
+            <h3 className="font-semibold text-slate-900 mb-2">{t.email.h}</h3>
             <div className="space-y-2 text-slate-600 leading-relaxed">
-              <p>Clicca sull&apos;icona 🔔 nell&apos;header per aprire le impostazioni:</p>
+              <p>{t.email.intro}</p>
               <ol className="list-decimal list-inside space-y-1">
-                <li>Attiva il toggle <span className="font-medium">Send email alerts when updates are detected</span></li>
-                <li>Inserisci l&apos;indirizzo email dove ricevere le notifiche</li>
-                <li>Clicca <span className="font-medium">Save</span></li>
-                <li>Usa <span className="font-medium">Send test email</span> per verificare che la configurazione funzioni</li>
+                <li>{t.email.s1}<span className="font-medium">Send email alerts when updates are detected</span></li>
+                <li>{t.email.s2}</li>
+                <li>{t.email.s3}<span className="font-medium">Save</span></li>
+                <li>{t.email.s4}<span className="font-medium">Send test email</span>{t.email.s4b}</li>
               </ol>
               <div className="flex gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700">
                 <span className="shrink-0">ℹ</span>
                 <span>
-                  Gli alert richiedono la variabile d&apos;ambiente{' '}
-                  <code className="font-mono bg-blue-100 px-1 rounded">RESEND_API_KEY</code>{' '}
-                  configurata nel progetto Vercel. Registrati su{' '}
-                  <strong>resend.com</strong> per ottenere una chiave gratuita.
+                  {t.email.info}
+                  <code className="font-mono bg-blue-100 px-1 rounded">RESEND_API_KEY</code>
+                  {t.email.infob}<strong>resend.com</strong>{t.email.infoc}
                 </span>
               </div>
             </div>
           </section>
 
+          {/* Privacy */}
           <section>
-            <h3 className="font-semibold text-slate-900 mb-1.5">Privacy e dati</h3>
+            <h3 className="font-semibold text-slate-900 mb-1.5">{t.privacy.h}</h3>
             <p className="text-slate-600 leading-relaxed">
-              La lista delle app e le impostazioni di ogni utente sono salvate privatamente su{' '}
-              <strong>Vercel Blob</strong>. Nessun altro utente può vedere o modificare i tuoi dati.
-              Per rimuovere i tuoi dati, elimina tutte le app dalla lista.
+              {t.privacy.p}<strong>Vercel Blob</strong>{t.privacy.pb}
             </p>
           </section>
 
+          {/* Env vars */}
           <section>
-            <h3 className="font-semibold text-slate-900 mb-2">Variabili d&apos;ambiente richieste</h3>
+            <h3 className="font-semibold text-slate-900 mb-2">{t.env.h}</h3>
             <div className="space-y-1">
-              {[
-                ['GOOGLE_CLIENT_ID', 'Client ID OAuth da Google Cloud Console'],
-                ['GOOGLE_CLIENT_SECRET', 'Client Secret OAuth da Google Cloud Console'],
-                ['AUTH_SECRET', 'Stringa random per firmare i JWT (openssl rand -base64 32)'],
-                ['BLOB_READ_WRITE_TOKEN', 'Impostato automaticamente da Vercel Blob'],
-                ['RESEND_API_KEY', 'Chiave API Resend per gli alert email (opzionale)'],
-                ['RESEND_FROM_EMAIL', 'Indirizzo mittente personalizzato (opzionale)'],
-                ['CRON_SECRET', 'Protezione endpoint cron da accessi non autorizzati (opzionale)'],
-              ].map(([key, desc]) => (
+              {t.env.vars.map(([key, desc]) => (
                 <div key={key} className="flex flex-col sm:flex-row sm:items-baseline gap-x-3 py-1 border-b border-slate-100 last:border-0">
                   <code className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 shrink-0">{key}</code>
                   <span className="text-xs text-slate-500">{desc}</span>
@@ -259,9 +417,7 @@ function HelpModal({ onClose }: { onClose: () => void }) {
 
         {/* Footer */}
         <div className="px-6 py-3 border-t border-slate-100 bg-slate-50 rounded-b-2xl shrink-0">
-          <p className="text-xs text-slate-400 text-center">
-            Android App Update Checker · dati da Google Play Store · invio email via Resend
-          </p>
+          <p className="text-xs text-slate-400 text-center">{t.footer}</p>
         </div>
 
       </div>
