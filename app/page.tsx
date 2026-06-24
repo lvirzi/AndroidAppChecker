@@ -504,7 +504,7 @@ function LoginScreen() {
           <div>
             <h1 className="text-xl font-bold text-slate-800">Update Checker</h1>
             <p className="text-sm text-slate-500 mt-1">
-              Track Play Store updates and get email alerts — automatically.
+              Track Play Store, Apple Store and URLs updates and get email alerts — automatically.
             </p>
           </div>
           <button
