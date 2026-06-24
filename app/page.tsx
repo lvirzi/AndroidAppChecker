@@ -359,7 +359,7 @@ function HelpModal({ onClose }: { onClose: () => void }) {
               ))}
             </div>
             <p className="text-slate-600 text-xs">
-              {t.add.step2}<span className="font-medium">Add an app</span>{t.add.step2b}
+              {t.add.step2}<span className="font-medium">Add an app/URL</span>{t.add.step2b}
             </p>
           </section>
 
@@ -999,7 +999,7 @@ function AppShell() {
 
         {/* Add form */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-          <h2 className="text-sm font-semibold text-slate-700 mb-3">Add an app</h2>
+          <h2 className="text-sm font-semibold text-slate-700 mb-3">Add an app/URL</h2>
           <form onSubmit={handleAdd} className="flex gap-2">
             <input
               type="text"
@@ -1020,7 +1020,7 @@ function AppShell() {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold text-slate-700">Tracked apps</h2>
+              <h2 className="text-sm font-semibold text-slate-700">Tracked apps/URLs</h2>
               <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full font-medium">{apps.length}</span>
             </div>
             {apps.length > 0 && (
