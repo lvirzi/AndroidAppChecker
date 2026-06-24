@@ -185,9 +185,6 @@ const T = {
       s4b: ' per verificare che la configurazione funzioni',
       formatH: 'Formato delle email',
       formatP: "Ogni email ha oggetto generico \"🔔 N updates detected\" e mostra una riga per ogni novità con: badge colorato del tipo (ANDROID / iOS / WEB), versione precedente e nuova per le app, \"Content changed\" per i siti web, e un link diretto al Play Store, App Store o alla pagina web monitorata.",
-      info: 'Gli alert richiedono la variabile d\'ambiente ',
-      infob: ' configurata nel progetto Vercel. Registrati su ',
-      infoc: ' per ottenere una chiave gratuita.',
     },
     privacy: {
       h: 'Privacy e dati',
@@ -259,9 +256,6 @@ const T = {
       s4b: ' to verify the configuration works',
       formatH: 'Email format',
       formatP: 'Each email has the generic subject "🔔 N updates detected" and shows one row per change: a coloured type badge (ANDROID / iOS / WEB), old and new version for apps, "Content changed" for websites, and a direct link to the Play Store, App Store or the monitored web page.',
-      info: 'Alerts require the ',
-      infob: ' environment variable configured in the Vercel project. Sign up at ',
-      infoc: ' for a free key.',
     },
     privacy: {
       h: 'Privacy & data',
@@ -457,14 +451,6 @@ function HelpModal({ onClose }: { onClose: () => void }) {
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
                 <p className="text-xs font-semibold text-slate-700 mb-1">{t.email.formatH}</p>
                 <p className="text-xs text-slate-600 leading-relaxed">{t.email.formatP}</p>
-              </div>
-              <div className="flex gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700">
-                <span className="shrink-0">ℹ</span>
-                <span>
-                  {t.email.info}
-                  <code className="font-mono bg-blue-100 px-1 rounded">RESEND_API_KEY</code>
-                  {t.email.infob}<strong>resend.com</strong>{t.email.infoc}
-                </span>
               </div>
             </div>
           </section>
