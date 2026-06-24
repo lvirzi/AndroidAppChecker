@@ -143,8 +143,12 @@ const T = {
         ['iOS', 'URL App Store', 'apps.apple.com/us/app/nome/id310633997', ''],
         ['Web', 'Qualsiasi URL HTTPS', 'https://esempio.com/pagina', ''],
       ] as [string, string, string, string][],
-      step2: 'Clicca ',
-      step2b: " — nome, icona e dati vengono recuperati automaticamente.",
+      step2: 'Clicca il pulsante verde ',
+      step2b: ' — il testo cambia in base al tipo rilevato: ',
+      btnApp: 'Add App',
+      btnAppDesc: 'per app,',
+      btnUrl: 'Add URL',
+      step2c: ' per URL web. Nome, icona e dati vengono recuperati automaticamente.',
     },
     check: {
       h: 'Verificare gli aggiornamenti',
@@ -172,6 +176,8 @@ const T = {
       s3: 'Clicca ',
       s4: 'Usa ',
       s4b: ' per verificare che la configurazione funzioni',
+      formatH: 'Formato delle email',
+      formatP: "Ogni email ha oggetto generico \"🔔 N updates detected\" e mostra una riga per ogni novità con: badge colorato del tipo (ANDROID / iOS / WEB), versione precedente e nuova per le app, \"Content changed\" per i siti web, e un link diretto al Play Store, App Store o alla pagina web monitorata.",
       info: 'Gli alert richiedono la variabile d\'ambiente ',
       infob: ' configurata nel progetto Vercel. Registrati su ',
       infoc: ' per ottenere una chiave gratuita.',
@@ -208,8 +214,12 @@ const T = {
         ['iOS', 'App Store URL', 'apps.apple.com/us/app/name/id310633997', ''],
         ['Web', 'Any HTTPS URL', 'https://example.com/page', ''],
       ] as [string, string, string, string][],
-      step2: 'Click ',
-      step2b: ' — name, icon and data are retrieved automatically.',
+      step2: 'Click the green button ',
+      step2b: ' — the label changes based on the detected type: ',
+      btnApp: 'Add App',
+      btnAppDesc: 'for apps,',
+      btnUrl: 'Add URL',
+      step2c: ' for web URLs. Name, icon and data are retrieved automatically.',
     },
     check: {
       h: 'Checking for updates',
@@ -237,6 +247,8 @@ const T = {
       s3: 'Click ',
       s4: 'Use ',
       s4b: ' to verify the configuration works',
+      formatH: 'Email format',
+      formatP: 'Each email has the generic subject "🔔 N updates detected" and shows one row per change: a coloured type badge (ANDROID / iOS / WEB), old and new version for apps, "Content changed" for websites, and a direct link to the Play Store, App Store or the monitored web page.',
       info: 'Alerts require the ',
       infob: ' environment variable configured in the Vercel project. Sign up at ',
       infoc: ' for a free key.',
@@ -358,8 +370,12 @@ function HelpModal({ onClose }: { onClose: () => void }) {
                 </div>
               ))}
             </div>
-            <p className="text-slate-600 text-xs">
+            <p className="text-slate-600 text-xs leading-relaxed">
               {t.add.step2}<span className="font-medium">Add an app/URL</span>{t.add.step2b}
+              <span className="mx-0.5 px-1.5 py-0.5 rounded bg-slate-100 font-mono text-[11px] text-slate-700">{t.add.btnApp}</span>
+              {' '}{t.add.btnAppDesc}{' '}
+              <span className="mx-0.5 px-1.5 py-0.5 rounded bg-slate-100 font-mono text-[11px] text-slate-700">{t.add.btnUrl}</span>
+              {t.add.step2c}
             </p>
           </section>
 
@@ -419,6 +435,10 @@ function HelpModal({ onClose }: { onClose: () => void }) {
                 <li>{t.email.s3}<span className="font-medium">Save</span></li>
                 <li>{t.email.s4}<span className="font-medium">Send test email</span>{t.email.s4b}</li>
               </ol>
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                <p className="text-xs font-semibold text-slate-700 mb-1">{t.email.formatH}</p>
+                <p className="text-xs text-slate-600 leading-relaxed">{t.email.formatP}</p>
+              </div>
               <div className="flex gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700">
                 <span className="shrink-0">ℹ</span>
                 <span>
