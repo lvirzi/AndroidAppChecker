@@ -150,18 +150,6 @@ const T = {
       p: 'La lista delle app e le impostazioni di ogni utente sono salvate privatamente su ',
       pb: '. Nessun altro utente può vedere o modificare i tuoi dati. Per rimuovere i tuoi dati, elimina tutte le app dalla lista.',
     },
-    env: {
-      h: "Variabili d'ambiente richieste",
-      vars: [
-        ['GOOGLE_CLIENT_ID', 'Client ID OAuth da Google Cloud Console'],
-        ['GOOGLE_CLIENT_SECRET', 'Client Secret OAuth da Google Cloud Console'],
-        ['AUTH_SECRET', 'Stringa random per firmare i JWT (openssl rand -base64 32)'],
-        ['BLOB_READ_WRITE_TOKEN', 'Impostato automaticamente da Vercel Blob'],
-        ['RESEND_API_KEY', 'Chiave API Resend per gli alert email (opzionale)'],
-        ['RESEND_FROM_EMAIL', 'Indirizzo mittente personalizzato (opzionale)'],
-        ['CRON_SECRET', 'Protezione endpoint cron da accessi non autorizzati (opzionale)'],
-      ] as [string, string][],
-    },
     footer: 'Android App Update Checker · dati da Google Play Store · invio email via Resend',
   },
   en: {
@@ -216,18 +204,6 @@ const T = {
       h: 'Privacy & data',
       p: "Each user's app list and settings are saved privately on ",
       pb: '. No other user can view or modify your data. To remove your data, delete all apps from the list.',
-    },
-    env: {
-      h: 'Required environment variables',
-      vars: [
-        ['GOOGLE_CLIENT_ID', 'OAuth Client ID from Google Cloud Console'],
-        ['GOOGLE_CLIENT_SECRET', 'OAuth Client Secret from Google Cloud Console'],
-        ['AUTH_SECRET', 'Random string to sign JWTs (openssl rand -base64 32)'],
-        ['BLOB_READ_WRITE_TOKEN', 'Set automatically by Vercel Blob'],
-        ['RESEND_API_KEY', 'Resend API key for email alerts (optional)'],
-        ['RESEND_FROM_EMAIL', 'Custom sender address (optional)'],
-        ['CRON_SECRET', 'Protects the cron endpoint from unauthorised access (optional)'],
-      ] as [string, string][],
     },
     footer: 'Android App Update Checker · data from Google Play Store · email via Resend',
   },
@@ -400,18 +376,6 @@ function HelpModal({ onClose }: { onClose: () => void }) {
             </p>
           </section>
 
-          {/* Env vars */}
-          <section>
-            <h3 className="font-semibold text-slate-900 mb-2">{t.env.h}</h3>
-            <div className="space-y-1">
-              {t.env.vars.map(([key, desc]) => (
-                <div key={key} className="flex flex-col sm:flex-row sm:items-baseline gap-x-3 py-1 border-b border-slate-100 last:border-0">
-                  <code className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 shrink-0">{key}</code>
-                  <span className="text-xs text-slate-500">{desc}</span>
-                </div>
-              ))}
-            </div>
-          </section>
 
         </div>
 
