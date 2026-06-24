@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@vercel/blob": "^2.4.1",
     "google-play-scraper": "^10.1.3",
     "next": "^15.3.4",
     "react": "^19.0.0",
