@@ -1269,7 +1269,7 @@ function AppShell() {
                       <td className="px-4 py-3 hidden sm:table-cell">
                         <div className="text-slate-600">{formatDate(app.dateAdded)}</div>
                         {app.sourceType !== 'web' && (
-                          <div className="text-xs text-slate-400">v{app.addedVersion}</div>
+                          <div className="text-xs text-slate-400">v{displayVersion(app.addedVersion)}</div>
                         )}
                       </td>
 
