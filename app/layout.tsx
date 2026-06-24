@@ -3,8 +3,8 @@ import './globals.css';
 import Providers from '@/components/Providers';
 
 export const metadata: Metadata = {
-  title: 'Android App Update Checker',
-  description: 'Monitor Android app updates from the Google Play Store',
+  title: 'Update Checker',
+  description: 'Monitor Android, iOS and web updates — get email alerts when changes are detected',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

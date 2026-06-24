@@ -467,7 +467,7 @@ function LoginScreen() {
             </div>
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-800">Android App Update Checker</h1>
+            <h1 className="text-xl font-bold text-slate-800">Update Checker</h1>
             <p className="text-sm text-slate-500 mt-1">
               Track Play Store updates and get email alerts — automatically.
             </p>
@@ -538,6 +538,18 @@ function AppShell() {
 
   const [input, setInput] = useState('');
   const [adding, setAdding] = useState(false);
+
+  // Detect input type client-side for dynamic button label (no crypto needed)
+  function detectInputType(raw: string): 'app' | 'url' | null {
+    const v = raw.trim();
+    if (!v) return null;
+    if (v.includes('play.google.com') || v.includes('apps.apple.com') || v.includes('itunes.apple.com')) return 'app';
+    if (/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(v)) return 'app';
+    try { const u = new URL(v); if (u.protocol === 'http:' || u.protocol === 'https:') return 'url'; } catch { /* not a url */ }
+    return null;
+  }
+  const inputType = detectInputType(input);
+  const addBtnLabel = inputType === 'app' ? 'Add App' : inputType === 'url' ? 'Add URL' : 'Add';
   const [addError, setAddError] = useState<string | null>(null);
   const [checkingAll, setCheckingAll] = useState(false);
   const [runningCron, setRunningCron] = useState(false);
@@ -850,7 +862,7 @@ function AppShell() {
             </svg>
           </div>
           <div className="min-w-0">
-            <h1 className="text-lg font-bold text-slate-800 leading-tight">Android App Update Checker</h1>
+            <h1 className="text-lg font-bold text-slate-800 leading-tight">Update Checker</h1>
           </div>
 
           <div className="ml-auto flex items-center gap-2">
@@ -998,7 +1010,7 @@ function AppShell() {
               className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent disabled:opacity-60 transition"
             />
             <button type="submit" disabled={adding || !input.trim()} className="px-4 py-2 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white text-sm font-medium rounded-lg transition flex items-center gap-2 whitespace-nowrap">
-              {adding ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Adding…</> : <><svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-white stroke-2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>Add app</>}
+              {adding ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Adding…</> : <><svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-white stroke-2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>{addBtnLabel}</>}
             </button>
           </form>
           {addError && <p className="mt-2 text-xs text-red-600 flex items-center gap-1"><span>⚠</span> {addError}</p>}
@@ -1052,27 +1064,27 @@ function AppShell() {
                             <Image
                               src={app.icon}
                               alt={app.name}
-                              width={168}
-                              height={168}
-                              className="rounded-2xl object-cover w-[168px] h-[168px]"
+                              width={56}
+                              height={56}
+                              className="rounded-xl object-cover w-14 h-14"
                               unoptimized
                             />
                           ) : (
-                            <div className={`w-[168px] h-[168px] rounded-2xl flex items-center justify-center ${
+                            <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
                               app.sourceType === 'ios' ? 'bg-slate-800' :
                               app.sourceType === 'web' ? 'bg-blue-600' :
                               'bg-slate-200'
                             }`}>
                               {app.sourceType === 'ios' ? (
-                                <svg viewBox="0 0 24 24" className="w-20 h-20 fill-white">
+                                <svg viewBox="0 0 24 24" className="w-7 h-7 fill-white">
                                   <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
                                 </svg>
                               ) : app.sourceType === 'web' ? (
-                                <svg viewBox="0 0 24 24" className="w-20 h-20 fill-none stroke-white stroke-1">
+                                <svg viewBox="0 0 24 24" className="w-7 h-7 fill-none stroke-white stroke-1">
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
                                 </svg>
                               ) : (
-                                <svg viewBox="0 0 24 24" className="w-20 h-20 fill-slate-400">
+                                <svg viewBox="0 0 24 24" className="w-7 h-7 fill-slate-400">
                                   <path d="M17.523 15.341a5.96 5.96 0 0 0 .477-2.341 5.96 5.96 0 0 0-.477-2.341l2.87-1.657a9.95 9.95 0 0 1 0 7.996l-2.87-1.657ZM6.477 15.341 3.607 17a9.95 9.95 0 0 1 0-7.996l2.87 1.657A5.96 5.96 0 0 0 6 13a5.96 5.96 0 0 0 .477 2.341ZM12 18a5.98 5.98 0 0 0 3.182-.91l1.657 2.87A9.95 9.95 0 0 1 12 22a9.95 9.95 0 0 1-4.839-1.04l1.657-2.87A5.98 5.98 0 0 0 12 18ZM12 8a5.98 5.98 0 0 0-3.182.91L7.16 6.04A9.95 9.95 0 0 1 12 5a9.95 9.95 0 0 1 4.839 1.04l-1.657 2.87A5.98 5.98 0 0 0 12 8Zm0 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
                                 </svg>
                               )}
