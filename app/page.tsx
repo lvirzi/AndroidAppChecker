@@ -982,12 +982,12 @@ function AppShell() {
                 <tbody className="divide-y divide-slate-100">
                   {apps.map((app) => (
                     <tr key={app.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">
                         {app.icon ? (
-                          <Image src={app.icon} alt={app.name} width={36} height={36} className="rounded-lg object-cover" unoptimized />
+                          <Image src={app.icon} alt={app.name} width={56} height={56} className="rounded-xl object-cover" unoptimized />
                         ) : (
-                          <div className="w-9 h-9 rounded-lg bg-slate-200 flex items-center justify-center">
-                            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-slate-400"><path d="M17.523 15.341a5.96 5.96 0 0 0 .477-2.341 5.96 5.96 0 0 0-.477-2.341l2.87-1.657a9.95 9.95 0 0 1 0 7.996l-2.87-1.657ZM6.477 15.341 3.607 17a9.95 9.95 0 0 1 0-7.996l2.87 1.657A5.96 5.96 0 0 0 6 13a5.96 5.96 0 0 0 .477 2.341ZM12 18a5.98 5.98 0 0 0 3.182-.91l1.657 2.87A9.95 9.95 0 0 1 12 22a9.95 9.95 0 0 1-4.839-1.04l1.657-2.87A5.98 5.98 0 0 0 12 18ZM12 8a5.98 5.98 0 0 0-3.182.91L7.16 6.04A9.95 9.95 0 0 1 12 5a9.95 9.95 0 0 1 4.839 1.04l-1.657 2.87A5.98 5.98 0 0 0 12 8Zm0 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" /></svg>
+                          <div className="w-14 h-14 rounded-xl bg-slate-200 flex items-center justify-center">
+                            <svg viewBox="0 0 24 24" className="w-7 h-7 fill-slate-400"><path d="M17.523 15.341a5.96 5.96 0 0 0 .477-2.341 5.96 5.96 0 0 0-.477-2.341l2.87-1.657a9.95 9.95 0 0 1 0 7.996l-2.87-1.657ZM6.477 15.341 3.607 17a9.95 9.95 0 0 1 0-7.996l2.87 1.657A5.96 5.96 0 0 0 6 13a5.96 5.96 0 0 0 .477 2.341ZM12 18a5.98 5.98 0 0 0 3.182-.91l1.657 2.87A9.95 9.95 0 0 1 12 22a9.95 9.95 0 0 1-4.839-1.04l1.657-2.87A5.98 5.98 0 0 0 12 18ZM12 8a5.98 5.98 0 0 0-3.182.91L7.16 6.04A9.95 9.95 0 0 1 12 5a9.95 9.95 0 0 1 4.839 1.04l-1.657 2.87A5.98 5.98 0 0 0 12 8Zm0 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" /></svg>
                           </div>
                         )}
                       </td>
