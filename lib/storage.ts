@@ -1,4 +1,4 @@
-import { list, put, del } from '@vercel/blob';
+import { list, put, del, get } from '@vercel/blob';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -53,13 +53,13 @@ const UUID_PATH_RE =
   /android-app-checker\/users\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\/data\.json$/i;
 
 async function fetchBlobJson(url: string): Promise<AppData | null> {
-  // Pre-signed URLs from list() already embed auth — no Authorization header needed.
-  const res = await fetch(url, { cache: 'no-store' });
-  if (!res.ok) {
-    console.error(`[storage] fetch failed: ${res.status} ${res.statusText}`);
-    return null;
-  }
-  const raw = (await res.json()) as Partial<AppData>;
+  // Use the SDK's get() — it handles auth (Bearer token via undici) correctly
+  // for private stores. Native fetch() returns 403 on private blob URLs.
+  const result = await get(url, { access: 'private' });
+  if (!result) return null; // 404
+
+  // Wrap the ReadableStream in a Response to read it as JSON
+  const raw = (await new Response(result.stream).json()) as Partial<AppData>;
   return {
     schemaVersion: raw.schemaVersion ?? 1,
     apps: raw.apps ?? [],
