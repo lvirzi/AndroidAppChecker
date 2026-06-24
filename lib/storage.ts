@@ -57,7 +57,11 @@ export async function readUserData(userId: string): Promise<AppData> {
 
   const res = await fetch(blobs[0].url, {
     cache: 'no-store',
-    headers: { 'Cache-Control': 'no-cache' },
+    headers: {
+      'Cache-Control': 'no-cache',
+      // Required when the Blob store is configured with private access
+      Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}`,
+    },
   });
   if (!res.ok) return EMPTY();
 
@@ -71,7 +75,7 @@ export async function readUserData(userId: string): Promise<AppData> {
 
 export async function writeUserData(userId: string, data: AppData): Promise<void> {
   await put(getUserPath(userId), JSON.stringify(data), {
-    access: 'public',
+    access: 'private',
     contentType: 'application/json',
     addRandomSuffix: false,
     allowOverwrite: true,
