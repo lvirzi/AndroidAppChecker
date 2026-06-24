@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readData, writeData, isBlobConfigured, type AppData } from '@/lib/storage';
+import { auth } from '@/auth';
+import { readUserData, writeUserData, isBlobConfigured, type AppData } from '@/lib/storage';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -8,12 +9,19 @@ const NOT_CONFIGURED = {
   error: 'Storage not configured — add BLOB_READ_WRITE_TOKEN to your Vercel environment variables',
 };
 
+async function getAuthenticatedUserId(): Promise<string | null> {
+  const session = await auth();
+  return session?.user?.id ?? null;
+}
+
 export async function GET() {
-  if (!isBlobConfigured()) {
-    return NextResponse.json(NOT_CONFIGURED, { status: 503 });
-  }
+  if (!isBlobConfigured()) return NextResponse.json(NOT_CONFIGURED, { status: 503 });
+
+  const userId = await getAuthenticatedUserId();
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   try {
-    const data = await readData();
+    const data = await readUserData(userId);
     return NextResponse.json(data);
   } catch (err) {
     console.error('[data GET]', err);
@@ -22,17 +30,20 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  if (!isBlobConfigured()) {
-    return NextResponse.json(NOT_CONFIGURED, { status: 503 });
-  }
+  if (!isBlobConfigured()) return NextResponse.json(NOT_CONFIGURED, { status: 503 });
+
+  const userId = await getAuthenticatedUserId();
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   let body: AppData;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
+
   try {
-    await writeData(body);
+    await writeUserData(userId, body);
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('[data POST]', err);

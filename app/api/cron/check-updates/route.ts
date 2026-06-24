@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { readData, writeData, isBlobConfigured, type StoredApp } from '@/lib/storage';
+import { auth } from '@/auth';
+import {
+  readUserData,
+  writeUserData,
+  listAllUserIds,
+  isBlobConfigured,
+  type StoredApp,
+} from '@/lib/storage';
 import { getAppInfo } from '@/lib/scraper';
 import { buildEmailHTML, type UpdateInfo } from '@/lib/email';
 
@@ -8,28 +15,20 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
-function sleep(ms: number) {
-  return new Promise((r) => setTimeout(r, ms));
+// ─── Shared check logic ───────────────────────────────────────────────────────
+
+interface CronResult {
+  checked: number;
+  updates: number;
+  emailSent: boolean;
+  updatedApps: string[];
 }
 
-export async function GET(request: NextRequest) {
-  // Verify the request comes from Vercel's cron scheduler
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const auth = request.headers.get('authorization');
-    if (auth !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-  }
-
-  if (!isBlobConfigured()) {
-    return NextResponse.json({ error: 'BLOB_READ_WRITE_TOKEN not configured' }, { status: 503 });
-  }
-
-  const data = await readData();
+async function checkUserApps(userId: string): Promise<CronResult> {
+  const data = await readUserData(userId);
 
   if (data.apps.length === 0) {
-    return NextResponse.json({ message: 'No apps to check', checked: 0, updates: 0 });
+    return { checked: 0, updates: 0, emailSent: false, updatedApps: [] };
   }
 
   const newlyFound: UpdateInfo[] = [];
@@ -40,7 +39,6 @@ export async function GET(request: NextRequest) {
     try {
       const info = await getAppInfo(app.packageId);
       const updateAvailable = info.version !== app.addedVersion;
-      // Only alert if the version is new AND we haven't already alerted for it
       const shouldAlert = updateAvailable && info.version !== app.lastAlertedVersion;
 
       updatedApps.push({
@@ -61,18 +59,16 @@ export async function GET(request: NextRequest) {
         });
       }
     } catch (err) {
-      console.error(`[cron] failed to check ${app.packageId}:`, err);
-      // Keep existing data on error — don't overwrite with stale info
+      console.error(`[cron] ${userId} / ${app.packageId}:`, err);
       updatedApps.push(app);
     }
 
-    await sleep(400); // stay within Play Store rate limits
+    // Throttle requests to Play Store
+    await new Promise((r) => setTimeout(r, 400));
   }
 
-  // Persist updated versions & check timestamps
-  await writeData({ ...data, apps: updatedApps });
+  await writeUserData(userId, { ...data, apps: updatedApps });
 
-  // Send summary email if there are new updates and email alerts are on
   let emailSent = false;
   const { emailSettings } = data;
 
@@ -92,15 +88,63 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  console.log(
-    `[cron] checked ${data.apps.length} apps — ${newlyFound.length} new updates` +
-      (emailSent ? ` — email sent to ${emailSettings.recipientEmail}` : ''),
-  );
-
-  return NextResponse.json({
+  return {
     checked: data.apps.length,
     updates: newlyFound.length,
     emailSent,
     updatedApps: newlyFound.map((u) => u.packageId),
+  };
+}
+
+// ─── GET — scheduled cron (all users) ────────────────────────────────────────
+
+export async function GET(request: NextRequest) {
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret) {
+    const auth_header = request.headers.get('authorization');
+    if (auth_header !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  }
+
+  if (!isBlobConfigured()) {
+    return NextResponse.json({ error: 'BLOB_READ_WRITE_TOKEN not configured' }, { status: 503 });
+  }
+
+  const userIds = await listAllUserIds();
+
+  if (userIds.length === 0) {
+    return NextResponse.json({ message: 'No users registered yet', users: 0 });
+  }
+
+  const results: Record<string, CronResult> = {};
+
+  for (const userId of userIds) {
+    results[userId] = await checkUserApps(userId);
+    console.log(
+      `[cron] user ${userId}: checked ${results[userId].checked}, ` +
+        `updates ${results[userId].updates}, email ${results[userId].emailSent}`,
+    );
+  }
+
+  return NextResponse.json({
+    users: userIds.length,
+    results,
   });
+}
+
+// ─── POST — manual trigger (authenticated, current user only) ─────────────────
+
+export async function POST() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  if (!isBlobConfigured()) {
+    return NextResponse.json({ error: 'BLOB_READ_WRITE_TOKEN not configured' }, { status: 503 });
+  }
+
+  const result = await checkUserApps(session.user.id);
+  return NextResponse.json(result);
 }
