@@ -134,10 +134,13 @@ async function getWebInfo(url: string): Promise<AppInfo> {
   const hostname = new URL(url).hostname;
   const name = titleMatch ? titleMatch[1].trim().slice(0, 100) : hostname;
 
+  // Use Google's favicon service as a reliable cross-domain favicon source
+  const favicon = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=64`;
+
   return {
     name,
     version: hash,
-    icon: null,
+    icon: favicon,
     developer: hostname,
     packageId: url,
     sourceType: 'web',

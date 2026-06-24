@@ -65,7 +65,8 @@ async function checkUserApps(userId: string): Promise<CronResult> {
       }
 
       const info = result.value;
-      const updateAvailable = info.version !== app.addedVersion;
+      const baseline = app.latestVersion ?? app.addedVersion;
+      const updateAvailable = info.version !== baseline;
       const shouldAlert = updateAvailable && info.version !== app.lastAlertedVersion;
 
       updatedApps.push({
