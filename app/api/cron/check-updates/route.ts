@@ -31,13 +31,40 @@ async function checkUserApps(userId: string): Promise<CronResult> {
     return { checked: 0, updates: 0, emailSent: false, updatedApps: [] };
   }
 
+  // CHECK_CONCURRENCY (server-only) takes precedence; falls back to the shared
+  // NEXT_PUBLIC_CHECK_CONCURRENCY, then to 3.
+  const concurrency = Math.max(
+    1,
+    parseInt(
+      process.env.CHECK_CONCURRENCY ??
+        process.env.NEXT_PUBLIC_CHECK_CONCURRENCY ??
+        '3',
+      10,
+    ),
+  );
+
   const newlyFound: UpdateInfo[] = [];
   const updatedApps: StoredApp[] = [];
   const now = new Date().toISOString();
 
-  for (const app of data.apps) {
-    try {
-      const info = await getAppInfo(app.sourceType ?? 'android', app.packageId);
+  for (let i = 0; i < data.apps.length; i += concurrency) {
+    const chunk = data.apps.slice(i, i + concurrency);
+
+    const results = await Promise.allSettled(
+      chunk.map((app) => getAppInfo(app.sourceType ?? 'android', app.packageId)),
+    );
+
+    for (let j = 0; j < chunk.length; j++) {
+      const app = chunk[j];
+      const result = results[j];
+
+      if (result.status === 'rejected') {
+        console.error(`[cron] ${userId} / ${app.packageId}:`, result.reason);
+        updatedApps.push(app); // keep existing data on error
+        continue;
+      }
+
+      const info = result.value;
       const updateAvailable = info.version !== app.addedVersion;
       const shouldAlert = updateAvailable && info.version !== app.lastAlertedVersion;
 
@@ -59,13 +86,12 @@ async function checkUserApps(userId: string): Promise<CronResult> {
           sourceType: app.sourceType ?? 'android',
         });
       }
-    } catch (err) {
-      console.error(`[cron] ${userId} / ${app.packageId}:`, err);
-      updatedApps.push(app);
     }
 
-    // Throttle requests to Play Store
-    await new Promise((r) => setTimeout(r, 400));
+    // Small pause between chunks to stay within rate limits
+    if (i + concurrency < data.apps.length) {
+      await new Promise((r) => setTimeout(r, 500));
+    }
   }
 
   await writeUserData(userId, { ...data, apps: updatedApps });

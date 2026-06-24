@@ -763,16 +763,100 @@ function AppShell() {
     }
   }
 
-  // ── Check all ──
+  // ── Check one (batch) — pure fetch, no state mutation ──
+  // Used by checkAll for parallel execution; state is applied in bulk after each chunk.
+  async function checkOneBatch(app: TrackedApp): Promise<{
+    id: string;
+    updatedApp: TrackedApp;
+    updateInfo: UpdateInfo | null;
+  }> {
+    try {
+      const res = await fetch(
+        `/api/check-version?packageId=${encodeURIComponent(app.packageId)}`,
+      );
+      if (!res.ok) {
+        const b = await res.json().catch(() => ({}));
+        return {
+          id: app.id,
+          updatedApp: { ...app, checking: false, error: b.error ?? `HTTP ${res.status}` },
+          updateInfo: null,
+        };
+      }
+      const info = await res.json() as { version: string; sourceType: 'android' | 'ios' | 'web' };
+      const updateAvailable = info.version !== app.addedVersion;
+      return {
+        id: app.id,
+        updatedApp: {
+          ...app,
+          checking: false,
+          latestVersion: info.version,
+          lastChecked: new Date().toISOString(),
+          updateAvailable,
+          lastAlertedVersion: updateAvailable ? info.version : app.lastAlertedVersion,
+          error: null,
+        },
+        updateInfo: updateAvailable
+          ? { name: app.name, packageId: app.packageId, icon: app.icon,
+              oldVersion: app.addedVersion, newVersion: info.version, sourceType: app.sourceType }
+          : null,
+      };
+    } catch (err) {
+      return {
+        id: app.id,
+        updatedApp: { ...app, checking: false, error: err instanceof Error ? err.message : 'Unknown error' },
+        updateInfo: null,
+      };
+    }
+  }
+
+  // ── Check all — parallel chunks ──
   async function checkAll() {
-    if (appsRef.current.length === 0 || checkingAll) return;
+    const allApps = appsRef.current;
+    if (!allApps.length || checkingAll) return;
     setCheckingAll(true);
     const found: UpdateInfo[] = [];
-    for (const app of appsRef.current) {
-      const u = await checkOne(app.id, true);
-      if (u) found.push(u);
-      await new Promise((r) => setTimeout(r, 300));
+
+    // NEXT_PUBLIC_ prefix makes the value available in the client bundle.
+    // Change NEXT_PUBLIC_CHECK_CONCURRENCY in Vercel → redeploy → new limit is live.
+    const concurrency = Math.max(
+      1,
+      parseInt(process.env.NEXT_PUBLIC_CHECK_CONCURRENCY ?? '3', 10),
+    );
+
+    for (let i = 0; i < allApps.length; i += concurrency) {
+      const chunk = allApps.slice(i, i + concurrency);
+      const chunkIds = new Set(chunk.map((a) => a.id));
+
+      // Mark chunk as checking
+      setApps((prev) => {
+        const updated = prev.map((a) =>
+          chunkIds.has(a.id) ? { ...a, checking: true, error: null } : a,
+        );
+        appsRef.current = updated;
+        return updated;
+      });
+
+      // Fetch all in parallel
+      const results = await Promise.allSettled(chunk.map(checkOneBatch));
+
+      // Apply all results atomically
+      let chunkFinalApps: TrackedApp[] = [];
+      setApps((prev) => {
+        let updated = [...prev];
+        for (const r of results) {
+          if (r.status !== 'fulfilled') continue;
+          const { id, updatedApp, updateInfo } = r.value;
+          updated = updated.map((a) => (a.id === id ? updatedApp : a));
+          if (updateInfo) found.push(updateInfo);
+        }
+        chunkFinalApps = updated;
+        appsRef.current = updated;
+        return updated;
+      });
+
+      save(chunkFinalApps, emailRef.current);
     }
+
     if (found.length > 0) {
       await sendUpdateEmail(found);
       const s = emailRef.current;
