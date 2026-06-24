@@ -24,6 +24,9 @@ export async function GET(request: NextRequest) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
 
+    if (msg === 'INTERNAL_URL_BLOCKED' || msg === 'PROTOCOL_NOT_ALLOWED' || msg === 'INVALID_URL') {
+      return NextResponse.json({ error: 'URL not allowed' }, { status: 400 });
+    }
     if (/APP_NOT_FOUND|404|not found|doesn't exist/i.test(msg)) {
       return NextResponse.json({ error: 'App not found' }, { status: 404 });
     }

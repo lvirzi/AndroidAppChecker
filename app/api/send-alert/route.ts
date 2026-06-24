@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { auth } from '@/auth';
 import { buildEmailHTML, type UpdateInfo } from '@/lib/email';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
+  // Require authentication — prevents unauthenticated email relay abuse
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   let body: { recipientEmail?: string; updates?: UpdateInfo[]; test?: boolean };
   try {
     body = await request.json();

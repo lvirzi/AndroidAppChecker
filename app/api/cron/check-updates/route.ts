@@ -128,11 +128,18 @@ async function checkUserApps(userId: string): Promise<CronResult> {
 
 export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const auth_header = request.headers.get('authorization');
-    if (auth_header !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  // CRON_SECRET is mandatory — a missing secret means the endpoint is public.
+  // Set it in Vercel env vars; Vercel's scheduler sends it automatically.
+  if (!cronSecret) {
+    console.error('[cron] CRON_SECRET is not configured — endpoint blocked for safety');
+    return NextResponse.json(
+      { error: 'Cron secret not configured — add CRON_SECRET to environment variables' },
+      { status: 503 },
+    );
+  }
+  const auth_header = request.headers.get('authorization');
+  if (auth_header !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   if (!isBlobConfigured()) {

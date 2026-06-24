@@ -116,7 +116,37 @@ function hashContent(html: string): string {
   return createHash('sha256').update(cleaned).digest('hex').slice(0, 12);
 }
 
+/** Blocks SSRF: rejects private/internal addresses and non-HTTP protocols. */
+function assertSafeUrl(raw: string): void {
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new Error('INVALID_URL');
+  }
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    throw new Error('PROTOCOL_NOT_ALLOWED');
+  }
+  const h = parsed.hostname.toLowerCase();
+  // Private IPv4 ranges, loopback, link-local (AWS/GCP metadata)
+  if (
+    h === 'localhost' ||
+    /^127\./.test(h) ||
+    /^10\./.test(h) ||
+    /^172\.(1[6-9]|2[0-9]|3[01])\./.test(h) ||
+    /^192\.168\./.test(h) ||
+    /^169\.254\./.test(h) ||   // AWS/GCP metadata endpoint
+    /^0\.0\.0\.0$/.test(h) ||
+    /^::1$/.test(h) ||         // IPv6 loopback
+    /^fc00:/i.test(h) ||       // IPv6 unique local
+    /^fe80:/i.test(h)          // IPv6 link-local
+  ) {
+    throw new Error('INTERNAL_URL_BLOCKED');
+  }
+}
+
 async function getWebInfo(url: string): Promise<AppInfo> {
+  assertSafeUrl(url);
   const res = await fetch(url, {
     headers: {
       'User-Agent':
