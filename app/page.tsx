@@ -1172,16 +1172,16 @@ function AppShell() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm table-fixed">
                 <thead>
                   <tr className="bg-slate-50 text-left">
                     <th className="px-2 py-3 text-xs font-semibold text-slate-500 w-[72px]" />
-                    <th className="px-4 py-3 text-xs font-semibold text-slate-500 min-w-[220px]">Name</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-slate-500 hidden md:table-cell">Package ID</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-slate-500 hidden sm:table-cell">Added on</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-slate-500">Version</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-slate-500">Status</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-slate-500 text-right">Actions</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-slate-500">Name</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-slate-500 hidden md:table-cell w-[180px]">Package ID</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-slate-500 hidden sm:table-cell w-[100px]">Added on</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-slate-500 hidden sm:table-cell w-[90px]">Version</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-slate-500 w-[140px]">Status</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-slate-500 text-right w-[72px]">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -1228,9 +1228,9 @@ function AppShell() {
                       </td>
 
                       {/* Name / developer */}
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-slate-800">{app.name}</div>
-                        {app.developer && <div className="text-xs text-slate-400">{app.developer}</div>}
+                      <td className="px-4 py-3 min-w-0">
+                        <div className="font-medium text-slate-800 truncate">{app.name}</div>
+                        {app.developer && <div className="text-xs text-slate-400 truncate">{app.developer}</div>}
                         {app.lastChecked && (
                           <div className="text-xs text-slate-400 mt-0.5 hidden sm:block">
                             Checked {formatDate(app.lastChecked)}
@@ -1268,7 +1268,7 @@ function AppShell() {
                       </td>
 
                       {/* Version / hash */}
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 hidden sm:table-cell">
                         {app.sourceType === 'web' ? (
                           <span className="font-mono text-xs text-slate-400">
                             {app.latestVersion ? app.latestVersion.slice(0, 8) : app.addedVersion.slice(0, 8)}
