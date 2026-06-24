@@ -55,15 +55,15 @@ export async function readUserData(userId: string): Promise<AppData> {
   const { blobs } = await list({ prefix: getUserPath(userId), limit: 1 });
   if (blobs.length === 0) return EMPTY();
 
-  const res = await fetch(blobs[0].url, {
-    cache: 'no-store',
-    headers: {
-      'Cache-Control': 'no-cache',
-      // Required when the Blob store is configured with private access
-      Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}`,
-    },
-  });
-  if (!res.ok) return EMPTY();
+  // For private stores, list() returns pre-signed URLs that already embed the
+  // auth token as query parameters. Adding an Authorization header on top of a
+  // pre-signed URL triggers an R2 "only one auth mechanism" error (400/403).
+  const res = await fetch(blobs[0].url, { cache: 'no-store' });
+
+  if (!res.ok) {
+    // Surface the error so it shows up in Vercel logs and in the UI
+    throw new Error(`Blob read failed: ${res.status} ${res.statusText}`);
+  }
 
   const raw = (await res.json()) as Partial<AppData>;
   return {
