@@ -152,10 +152,30 @@ The `touch-show` / `touch-hide` CSS classes are defined in `globals.css` using
 "Request desktop site" enabled (unlike `max-width` breakpoints which read the
 inflated CSS viewport).
 
-After OAuth redirects, Chrome may carry a desktop context. A `useEffect` in
-`AppShell` detects this case (`maxTouchPoints > 0` but `pointer:coarse` false)
-and triggers a single programmatic `window.location.reload()` (guarded by
-`sessionStorage` to prevent infinite loops).
+#### Viewport fix after OAuth redirect
+
+After a Google OAuth redirect, Chrome may carry a "desktop" viewport context
+into the next page load (inflating `window.innerWidth` to ~980 px on a phone).
+`pointer: coarse` then evaluates to false, CSS cards stay hidden.
+
+The fix is an **inline `<script>` in `layout.tsx`** (executed before React,
+before CSS, before any pixel is painted):
+
+```javascript
+// Fires immediately on every page load
+if (performance.navigation.type === 1) return; // already a reload — stop
+if (navigator.maxTouchPoints > 0             // touch device
+    && Math.min(screen.width, screen.height) < 640   // phone screen
+    && window.innerWidth > 700)              // viewport is inflated
+  location.reload();
+```
+
+`performance.navigation.type === 1` (TYPE_RELOAD) is the anti-loop guard:
+the reload itself sets this to `1`, so the script skips on the second load.
+
+**Do NOT replace this with a `useEffect`** — React effects fire too late
+(after hydration), and `window.location.reload()` called from an effect may
+not exit Chrome's desktop context the same way a native reload does.
 
 ---
 
