@@ -20,6 +20,14 @@ function displayVersion(v: string): string {
   return /varies/i.test(v) ? 'MULTIPLE' : v;
 }
 
+/** Build the store link for an app. Handles legacy entries where packageId
+ *  was saved as a full URL instead of just the extracted ID. */
+function storeUrl(sourceType: 'android' | 'ios' | 'web', packageId: string): string {
+  if (packageId.startsWith('http')) return packageId; // already a full URL
+  if (sourceType === 'ios') return `https://apps.apple.com/app/id${packageId}`;
+  return `https://play.google.com/store/apps/details?id=${packageId}`;
+}
+
 function formatDate(iso: string | null): string {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('it-IT', {
@@ -1325,11 +1333,7 @@ function AppShell() {
                           </a>
                         ) : (
                           <a
-                            href={
-                              app.sourceType === 'ios'
-                                ? `https://apps.apple.com/app/id${app.packageId}`
-                                : `https://play.google.com/store/apps/details?id=${app.packageId}`
-                            }
+                            href={storeUrl(app.sourceType, app.packageId)}
                             target="_blank" rel="noopener noreferrer"
                             className="text-xs text-slate-500 hover:text-green-600 font-mono underline-offset-2 hover:underline transition-colors break-all block">
                             {app.packageId}
