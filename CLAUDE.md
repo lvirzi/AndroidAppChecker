@@ -4,6 +4,39 @@ Project guide for AI assistants. Read this before making changes.
 
 ---
 
+## Codebase Statistics
+
+| Metric | Value |
+|---|---|
+| Source files | 15 |
+| **Total lines of code** | **2 260** |
+| `.ts` files | 9 |
+| `.tsx` files | 3 |
+| Production dependencies | 7 |
+| Dev dependencies | 8 |
+| Installed packages (node_modules) | 370 |
+| API route handlers | 5 |
+| Git commits | 46 |
+
+**File breakdown (largest first):**
+
+| File | Lines | Purpose |
+|---|---|---|
+| `app/page.tsx` | 1 395 | Full UI: login, app shell, bilingual manual, mobile/desktop layouts |
+| `app/api/cron/check-updates/route.ts` | 192 | Cron scheduler + manual trigger |
+| `lib/scraper.ts` | 178 | Android/iOS/web scraping + SSRF protection |
+| `lib/email.ts` | 133 | Type-aware HTML email template |
+| `lib/storage.ts` | 100 | Vercel Blob CRUD |
+| `app/api/send-alert/route.ts` | 64 | Email send endpoint |
+| `app/api/data/route.ts` | 52 | User data GET/POST |
+| `app/api/check-version/route.ts` | 49 | Version/hash fetch |
+| `app/layout.tsx` | 43 | Root layout + viewport fix script |
+| `auth.ts` | 32 | Auth.js v5 config |
+
+**`page.tsx` internals:** 18 functions/components, 24 React hooks, 214 translation strings (IT + EN).
+
+---
+
 ## Overview
 
 **Update Checker** is a multi-user web application that monitors:
