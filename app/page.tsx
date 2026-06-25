@@ -171,8 +171,6 @@ const T = {
       p1b: ' per tutti gli utenti registrati. Se vengono trovate novità, viene inviata una email riepilogativa a ciascun utente che ha gli alert attivi.',
       p2a: 'Il pulsante ',
       p2b: " nell'header esegue immediatamente il controllo per l'utente corrente, senza aspettare l'orario schedulato. È utile per testare gli alert o forzare un aggiornamento immediato dei dati.",
-      concurrency: 'Il numero di verifiche parallele è configurabile tramite la variabile d\'ambiente ',
-      concurrencyB: ' su Vercel (default: 3). Richiede un redeploy per applicare il cambiamento.',
       warn: "La stessa novità viene notificata via email una sola volta. Per le app viene confrontata la versione; per i siti web viene confrontato l'hash del contenuto.",
     },
     email: {
@@ -242,8 +240,6 @@ const T = {
       p1b: ' for all registered users. If new findings are detected, a summary email is sent to each user with alerts enabled.',
       p2a: 'The ',
       p2b: ' button in the header immediately runs the check for the current user, without waiting for the scheduled time. Useful for testing alerts or forcing an immediate data refresh.',
-      concurrency: 'The number of parallel checks is configurable via the ',
-      concurrencyB: ' environment variable on Vercel (default: 3). A redeploy is required to apply the change.',
       warn: 'The same finding is only notified once by email. For apps the version is compared; for websites the content hash is compared.',
     },
     email: {
@@ -425,11 +421,6 @@ function HelpModal({ onClose }: { onClose: () => void }) {
             <div className="space-y-2 text-slate-600 leading-relaxed">
               <p>{t.cron.p1a}<strong>08:00 UTC</strong>{t.cron.p1b}</p>
               <p>{t.cron.p2a}<span className="font-medium text-slate-700">Run cron now</span>{t.cron.p2b}</p>
-              <p className="text-xs text-slate-500">
-                {t.cron.concurrency}
-                <code className="font-mono bg-slate-100 px-1 rounded">NEXT_PUBLIC_CHECK_CONCURRENCY</code>
-                {t.cron.concurrencyB}
-              </p>
               <div className="flex gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
                 <span className="shrink-0">⚠</span>
                 <span>{t.cron.warn}</span>
@@ -934,8 +925,7 @@ function AppShell() {
         <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 shadow-sm p-8 space-y-4">
           <h1 className="text-lg font-bold text-slate-800">Storage not configured</h1>
           <p className="text-sm text-slate-600">
-            Add a <strong>Vercel Blob</strong> store to your project — Vercel will automatically set{' '}
-            <code className="bg-slate-100 px-1 rounded font-mono text-xs">BLOB_READ_WRITE_TOKEN</code>.
+            The storage service is not configured. Please contact the administrator.
           </p>
         </div>
       </div>
@@ -1139,8 +1129,7 @@ function AppShell() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
                 </svg>
                 <span>
-                  Cron runs daily at 08:00 UTC for all users. Requires{' '}
-                  <code className="font-mono bg-blue-100 px-1 rounded">RESEND_API_KEY</code>. Use{' '}
+                  Cron runs daily at 08:00 UTC for all users. Use{' '}
                   <strong>Run cron now</strong> to trigger a check immediately.
                 </span>
               </div>
