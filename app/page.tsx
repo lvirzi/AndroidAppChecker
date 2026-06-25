@@ -419,7 +419,7 @@ function HelpModal({ onClose }: { onClose: () => void }) {
           <section>
             <h3 className="font-semibold text-slate-900 mb-2">{t.cron.h}</h3>
             <div className="space-y-2 text-slate-600 leading-relaxed">
-              <p>{t.cron.p1a}<strong>10:30</strong>{t.cron.p1b}</p>
+              <p>{t.cron.p1a}<strong>08:00</strong>{t.cron.p1b}</p>
               <p>{t.cron.p2a}<span className="font-medium text-slate-700">Run cron now</span>{t.cron.p2b}</p>
               <div className="flex gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
                 <span className="shrink-0">⚠</span>
@@ -706,11 +706,11 @@ function AppShell() {
     try {
       const res = await fetch(`/api/check-version?packageId=${encodeURIComponent(raw)}`);
       if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.error ?? `HTTP ${res.status}`); }
-      const info = await res.json() as { name: string; version: string; icon: string | null; developer: string | null; sourceType: 'android' | 'ios' | 'web' };
+      const info = await res.json() as { name: string; version: string; icon: string | null; developer: string | null; sourceType: 'android' | 'ios' | 'web'; packageId: string };
       const newApp: TrackedApp = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         sourceType: info.sourceType,
-        packageId: raw,
+        packageId: info.packageId,  // use the ID already extracted by the API, not the raw URL
         name: info.name,
         icon: info.icon,
         developer: info.developer,
@@ -1129,7 +1129,7 @@ function AppShell() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
                 </svg>
                 <span>
-                  Cron runs daily at 10:30 for all users. Use{' '}
+                  Cron runs daily at 08:00 for all users. Use{' '}
                   <strong>Run cron now</strong> to trigger a check immediately.
                 </span>
               </div>
@@ -1330,7 +1330,7 @@ function AppShell() {
         </div>
 
         <p className="text-center text-xs text-slate-400">
-          Signed in as <span className="text-slate-600">{session?.user?.email}</span> · Data synced to Vercel Blob · Cron daily at 10:30
+          Signed in as <span className="text-slate-600">{session?.user?.email}</span> · Data synced to Vercel Blob · Cron daily at 08:00
           {emailSettings.enabled && emailSettings.recipientEmail && (
             <> · <span className="text-green-600">Alerts → {emailSettings.recipientEmail}</span></>
           )}

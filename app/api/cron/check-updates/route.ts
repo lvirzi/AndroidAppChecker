@@ -8,7 +8,7 @@ import {
   isBlobConfigured,
   type StoredApp,
 } from '@/lib/storage';
-import { getAppInfo } from '@/lib/scraper';
+import { getAppInfo, detectSource } from '@/lib/scraper';
 import { buildEmailHTML, type UpdateInfo } from '@/lib/email';
 
 export const runtime = 'nodejs';
@@ -51,7 +51,14 @@ async function checkUserApps(userId: string): Promise<CronResult> {
     const chunk = data.apps.slice(i, i + concurrency);
 
     const results = await Promise.allSettled(
-      chunk.map((app) => getAppInfo(app.sourceType ?? 'android', app.packageId)),
+      chunk.map((app) => {
+        // Normalise legacy entries where packageId was saved as a full URL.
+        // detectSource extracts the real ID; falls back to the stored value.
+        const detected = detectSource(app.packageId);
+        const type = detected?.type ?? app.sourceType ?? 'android';
+        const id   = detected?.id   ?? app.packageId;
+        return getAppInfo(type, id);
+      }),
     );
 
     for (let j = 0; j < chunk.length; j++) {
