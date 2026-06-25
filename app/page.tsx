@@ -549,6 +549,9 @@ function AppShell() {
   const [showSettings, setShowSettings] = useState(false);
   const [showManual, setShowManual] = useState(false);
   const [showSignOutMenu, setShowSignOutMenu] = useState(false);
+  // Uses screen.width (physical pixels) so it works even when Chrome
+  // is in "Desktop site" mode and reports a wide CSS viewport.
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [emailDraft, setEmailDraft] = useState('');
   const [enabledDraft, setEnabledDraft] = useState(false);
   const [testingEmail, setTestingEmail] = useState(false);
@@ -635,6 +638,15 @@ function AppShell() {
         setDataStatus('error');
       }
     })();
+  }, []);
+
+  // ── Detect physical screen size (works even in Chrome "Desktop site" mode) ──
+  useEffect(() => {
+    const check = () =>
+      setIsSmallScreen(Math.min(window.screen.width, window.screen.height) < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
   }, []);
 
   // ── Auto check-all on login ──
@@ -1197,6 +1209,58 @@ function AppShell() {
               <p className="text-xs text-slate-400 mt-1">Paste a Play Store URL above to get started.</p>
             </div>
           ) : (
+            <>
+            {/* ── Mobile card view ── */}
+            <div className={isSmallScreen ? 'block' : 'sm:hidden'}>
+              <div className="divide-y divide-slate-100">
+                {apps.map((app) => (
+                  <div key={`m-${app.id}`} className="p-4 hover:bg-slate-50 transition-colors">
+                    {/* Row 1: icon + name + developer */}
+                    <div className="flex items-center gap-3 mb-2.5">
+                      <div className="relative shrink-0">
+                        {app.icon ? (
+                          <Image src={app.icon} alt={app.name} width={40} height={40} className="rounded-lg object-cover w-10 h-10" unoptimized />
+                        ) : (
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${app.sourceType === 'ios' ? 'bg-slate-800' : app.sourceType === 'web' ? 'bg-blue-600' : 'bg-slate-200'}`}>
+                            {app.sourceType === 'ios' ? (
+                              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                            ) : app.sourceType === 'web' ? (
+                              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-white stroke-1"><path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418"/></svg>
+                            ) : (
+                              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-slate-400"><path d="M17.523 15.341a5.96 5.96 0 0 0 .477-2.341 5.96 5.96 0 0 0-.477-2.341l2.87-1.657a9.95 9.95 0 0 1 0 7.996l-2.87-1.657ZM6.477 15.341 3.607 17a9.95 9.95 0 0 1 0-7.996l2.87 1.657A5.96 5.96 0 0 0 6 13a5.96 5.96 0 0 0 .477 2.341ZM12 18a5.98 5.98 0 0 0 3.182-.91l1.657 2.87A9.95 9.95 0 0 1 12 22a9.95 9.95 0 0 1-4.839-1.04l1.657-2.87A5.98 5.98 0 0 0 12 18ZM12 8a5.98 5.98 0 0 0-3.182.91L7.16 6.04A9.95 9.95 0 0 1 12 5a9.95 9.95 0 0 1 4.839 1.04l-1.657 2.87A5.98 5.98 0 0 0 12 8Zm0 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg>
+                            )}
+                          </div>
+                        )}
+                        <div className="absolute -bottom-1.5 -right-0.5 z-10 scale-[0.8] origin-bottom-right">
+                          <SourceTypeBadge type={app.sourceType} />
+                        </div>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-slate-800 leading-snug break-words">{app.name}</div>
+                        {app.developer && <div className="text-xs text-slate-400">{app.developer}</div>}
+                        {app.error && <div className="text-xs text-red-500 mt-0.5" title={app.error}>⚠ {app.error}</div>}
+                      </div>
+                    </div>
+                    {/* Row 2: date + status + actions */}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-slate-400 shrink-0">Added: {formatDate(app.dateAdded)}</span>
+                      <StatusBadge app={app} />
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button onClick={() => checkOne(app.id)} disabled={app.checking || checkingAll || runningCron} title="Check" className="p-1.5 rounded-lg text-slate-400 hover:text-green-600 hover:bg-green-50 active:bg-green-100 disabled:opacity-40 transition-colors">
+                          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 0 0 4.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 0 1-15.357-2m15.357 2H15"/></svg>
+                        </button>
+                        <button onClick={() => removeApp(app.id)} disabled={app.checking} title="Remove" className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 active:bg-red-100 disabled:opacity-40 transition-colors">
+                          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Desktop table view ── */}
+            <div className={isSmallScreen ? 'hidden' : 'hidden sm:block'}>
             <div className="overflow-x-auto">
               <table className="w-full text-sm table-fixed">
                 <thead>
@@ -1326,6 +1390,8 @@ function AppShell() {
                 </tbody>
               </table>
             </div>
+            </div>
+            </>
           )}
         </div>
 
