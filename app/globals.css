@@ -1,1 +1,12 @@
 @import "tailwindcss";
+
+/*
+  touch-show / touch-hide — detect touch devices via pointer capability.
+  This is NOT affected by Chrome "Request desktop site" mode (which only
+  changes the CSS viewport width, not the pointer type). Works immediately
+  on page load without any JavaScript.
+*/
+@media (pointer: coarse) {
+  .touch-show { display: block !important; }
+  .touch-hide { display: none !important; }
+}

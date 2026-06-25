@@ -549,9 +549,6 @@ function AppShell() {
   const [showSettings, setShowSettings] = useState(false);
   const [showManual, setShowManual] = useState(false);
   const [showSignOutMenu, setShowSignOutMenu] = useState(false);
-  // Uses screen.width (physical pixels) so it works even when Chrome
-  // is in "Desktop site" mode and reports a wide CSS viewport.
-  const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [emailDraft, setEmailDraft] = useState('');
   const [enabledDraft, setEnabledDraft] = useState(false);
   const [testingEmail, setTestingEmail] = useState(false);
@@ -638,15 +635,6 @@ function AppShell() {
         setDataStatus('error');
       }
     })();
-  }, []);
-
-  // ── Detect physical screen size (works even in Chrome "Desktop site" mode) ──
-  useEffect(() => {
-    const check = () =>
-      setIsSmallScreen(Math.min(window.screen.width, window.screen.height) < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
   }, []);
 
   // ── Auto check-all on login ──
@@ -1210,8 +1198,8 @@ function AppShell() {
             </div>
           ) : (
             <>
-            {/* ── Mobile card view ── */}
-            <div className={isSmallScreen ? 'block' : 'sm:hidden'}>
+            {/* ── Mobile card view — hidden by default, shown on touch devices via CSS ── */}
+            <div className="hidden touch-show">
               <div className="divide-y divide-slate-100">
                 {apps.map((app) => (
                   <div key={`m-${app.id}`} className="p-4 hover:bg-slate-50 transition-colors">
@@ -1259,8 +1247,8 @@ function AppShell() {
               </div>
             </div>
 
-            {/* ── Desktop table view ── */}
-            <div className={isSmallScreen ? 'hidden' : 'hidden sm:block'}>
+            {/* ── Desktop table view — hidden on touch devices via CSS ── */}
+            <div className="touch-hide">
             <div className="overflow-x-auto">
               <table className="w-full text-sm table-fixed">
                 <thead>
