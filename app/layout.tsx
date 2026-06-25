@@ -16,9 +16,25 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
+// Inline script: runs before React, before CSS, before any paint.
+// Detects Chrome "Desktop site" viewport inflation on touch devices and
+// reloads once. Uses performance.navigation.type to avoid infinite loops
+// (type===1 means this IS already a reload → skip check).
+const viewportFixScript = `(function(){try{
+  var nav=performance.navigation;
+  var isReload=nav?nav.type===1:((performance.getEntriesByType('navigation')[0]||{}).type==='reload');
+  if(isReload)return;
+  if(navigator.maxTouchPoints>0&&Math.min(screen.width,screen.height)<640&&window.innerWidth>700)
+    location.reload();
+}catch(e){}})();`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="it">
+      <head>
+        {/* biome-ignore lint: intentional inline script for mobile viewport fix */}
+        <script dangerouslySetInnerHTML={{ __html: viewportFixScript }} />
+      </head>
       <body className="bg-slate-50 min-h-screen">
         <Providers>{children}</Providers>
       </body>

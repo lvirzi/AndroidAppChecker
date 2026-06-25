@@ -637,21 +637,6 @@ function AppShell() {
     })();
   }, []);
 
-  // ── Fix viewport after OAuth redirect in Chrome "Desktop site" mode ──
-  // After a Google OAuth redirect, Chrome may carry a "desktop" viewport context
-  // even on touch devices. A single programmatic reload resets it.
-  // sessionStorage flag prevents infinite reloads.
-  useEffect(() => {
-    const hasTouch = navigator.maxTouchPoints > 0;
-    if (!hasTouch) return;                                       // desktop — nothing to do
-    if (sessionStorage.getItem('uc-vp-ok')) return;              // already fixed this session
-    if (window.matchMedia('(pointer: coarse)').matches) return;  // CSS already correct
-
-    // Touch device but pointer:coarse not matching → Chrome overriding viewport
-    sessionStorage.setItem('uc-vp-ok', '1');
-    window.location.reload();
-  }, []);
-
   // ── Auto check-all on login ──
   const autoChecked = useRef(false);
   useEffect(() => {
